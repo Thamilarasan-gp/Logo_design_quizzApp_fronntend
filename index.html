@@ -133,25 +133,25 @@
             <h3>Congratulations! You completed the quiz!</h3>
             <button onclick="showLeaderboard()">View Leaderboard</button>
         </div>
+    </div>
 
-        <!-- Add new leaderboard section -->
-        <div id="leaderboard" style="display: none;">
-            <h3>Top Scores</h3>
-            <table id="leaderboardTable">
-                <thead>
-                    <tr>
-                        <th>Rank</th>
-                        <th>Name</th>
-                        <th>Score</th>
-                        <th>Time</th>
-                        <th>Date</th>
-                    </tr>
-                </thead>
-                <tbody id="leaderboardBody">
-                </tbody>
-            </table>
-            <button onclick="hideLeaderboard()">Close Leaderboard</button>
-        </div>
+    <!-- Move this section outside of quizSection -->
+    <div id="leaderboard" style="display: none;">
+        <h3>Top Scores</h3>
+        <table id="leaderboardTable">
+            <thead>
+                <tr>
+                    <th>Rank</th>
+                    <th>Name</th>
+                    <th>Score</th>
+                    <th>Time</th>
+                    <th>Date</th>
+                </tr>
+            </thead>
+            <tbody id="leaderboardBody">
+            </tbody>
+        </table>
+        <button onclick="hideLeaderboard()">Close Leaderboard</button>
     </div>
 
     <script src="script.js"></script>
