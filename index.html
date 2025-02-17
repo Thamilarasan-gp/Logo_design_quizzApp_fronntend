@@ -6,6 +6,10 @@
     <title>Quiz - Fizz xo Solutions</title>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <meta name="theme-color" content="#FF6B6B">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 </head>
 <body>
     <!-- Add this right after the body tag opens -->
@@ -20,8 +24,16 @@
         <div class="decoration decoration-left"></div>
         <div class="decoration decoration-right"></div>
 
-        <h1 class="welcome-title">Do you know your IT?</h1>
-        <p class="welcome-subtitle">Take this quick quiz to test your knowledge and compete with others!</p>
+        <div class="welcome-header">
+            <h2 class="pre-title">Welcome to</h2>
+            <img src="./thiran logo.jpg" alt="Thiran Logo" class="quiz-logo">
+            <p class="welcome-subtitle">Take this quick quiz to test your knowledge and compete with others!</p>
+        </div>
+
+        <div class="logo-design-section">
+        
+            <h3 class="design-title">Logo Design Quiz</h3>
+        </div>
 
         <div class="features-list">
             <div class="feature-item">
@@ -32,14 +44,23 @@
                 <h3>🏆 Compete</h3>
                 <p>See how you rank against other participants</p>
             </div>
-            <div class="feature-item">
-                <h3>⚡ Quick & Fun</h3>
-                <p>Complete the quiz in just a few minutes</p>
-            </div>
+           
         </div>
 
         <input type="text" class="name-input" id="playerName" placeholder="Enter your name to begin">
         <button onclick="startQuiz()" class="start-button">Start Quiz</button>
+
+        <div class="developer-credit">
+            <p>Developed by Thamilarasan G P</p>
+            <div class="social-links">
+                <a href="https://www.instagram.com/_life_liner_/?__pwa=1" target="_blank" class="social-link instagram">
+                    <i class="fab fa-instagram"></i>
+                </a>
+                <a href="https://www.linkedin.com/in/thamilarasangp" target="_blank" class="social-link linkedin">
+                    <i class="fab fa-linkedin"></i>
+                </a>
+            </div>
+        </div>
     </div>
 
     <!-- Quiz Section -->
@@ -54,7 +75,7 @@
                 <li>It encompasses various disciplines like software engineering, database management, and information security.</li>
                 <li>It is a rapidly growing field with a broad range of career opportunities.</li>
             </ul>
-            <p class="hint">(Hint: It's the short name for the backbone of technology that powers everything around us)</p>
+            <p class="hint">💡Hint: It's the short name for the backbone of technology that powers everything around us</p>
             <input type="text" id="answer1" placeholder="Your answer here...">
             <button onclick="checkAnswer(1, 'IT')">Submit</button>
         </div>
@@ -67,7 +88,7 @@
                 <li>C) Creator's Vault (Where ideas are stored, not grown)</li>
                 <li>D) Dream Factory (Sounds magical but not realistic)</li>
             </ul>
-            <p class="hint">(Hint: Think about the place where famous tech giants were born—like Swiggy and Zomato.This is starting Point of Big giants company)</p>
+            <p class="hint">💡Hint: Think about the place where famous tech giants were born—like Swiggy and Zomato.This is starting Point of Big giants company</p>
             <input type="text" id="answer2" placeholder="Your answer here...">
             <button onclick="checkAnswer(2, 'Startup')">Submit</button>
         </div>
@@ -80,7 +101,7 @@
                 <li>It is usually registered with the government for legal and tax purposes.</li>
                 <li>It's the common term for any organization that builds and delivers products or services</li>
             </ul>
-            <p class="hint">(Hint: In this field, we often talk about "products" and "services" that are offered to the market.)</p>
+            <p class="hint">💡Hint: In this field, we often talk about "products" and "services" that are offered to the market.</p>
             <input type="text" id="answer3" placeholder="Your answer here...">
             <button onclick="checkAnswer(3, 'Company')">Submit</button>
         </div>
@@ -93,7 +114,7 @@
                 <li>It specializes in offering business solutions, digital transformation, and consulting services.</li>
                 <li>It operates in the technology and consulting industry, helping clients achieve growth and innovation.</li>
             </ul>
-            <p class="hint">(Hint: Think of something that centers around 'xo' and has a bubbly, exciting feel—like it starts with fizz in a drink. )</p>
+            <p class="hint">💡Hint: Think of something that centers around 'xo' and has a bubbly, exciting feel—like it starts with fizz in a drink. </p>
             <input type="text" id="answer4" placeholder="Your answer here...">
             <button onclick="checkAnswer(4, 'Fizz xo Solutions')">Submit</button>
         </div>
@@ -106,7 +127,7 @@
                 <li>C) Identity Mark (Leaves an impression but lacks design)</li>
                 <li>D) Signature Crest (Traditional, not modern)</li>
             </ul>
-            <p class="hint">(Hint: It's the face of the brand, like the swoosh for Nike or the bitten apple for Apple)</p>
+            <p class="hint">💡Hint: It's the face of the brand, like the swoosh for Nike or the bitten apple for Apple</p>
             <input type="text" id="answer5" placeholder="Your answer here...">
             <button onclick="checkAnswer(5, 'Logo')">Submit</button>
         </div>

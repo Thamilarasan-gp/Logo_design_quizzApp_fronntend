@@ -204,100 +204,188 @@ async function saveResult(completionTime) {
     }
 }
 
-async function showLeaderboard() {
-    try {
-        const leaderboardBody = document.getElementById('leaderboardBody');
-        leaderboardBody.innerHTML = '<tr><td colspan="5">Loading...</td></tr>';
-        document.getElementById('leaderboard').style.display = 'block';
+// Cache DOM elements
+const leaderboardEl = document.getElementById('leaderboard');
+const leaderboardBody = document.getElementById('leaderboardBody');
+const quizSection = document.getElementById('quizSection');
+const nameInput = document.getElementById('nameInput');
 
-        const serverUrl = 'https://logo-design-quizzapp.onrender.com';
-        const response = await fetch(`${serverUrl}/api/leaderboard`, {
-            credentials: 'include',
+// Constants
+const SERVER_URL = 'https://logo-design-quizzapp.onrender.com';
+const CACHE_DURATION = 10000; // 10 seconds cache
+let cachedLeaderboard = new Map(); // Using Map for faster lookups
+let isFetching = false;
+
+// Preload leaderboard data
+function preloadLeaderboard() {
+    prefetchData();
+    // Prefetch every 10 seconds
+    setInterval(prefetchData, 10000);
+}
+
+// Optimized fetch with AbortController
+async function prefetchData() {
+    if (isFetching) return;
+    
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 5000); // 5s timeout
+
+    try {
+        isFetching = true;
+        const response = await fetch(`${SERVER_URL}/api/leaderboard`, {
+            signal: controller.signal,
+            method: 'GET',
             headers: {
-                'Origin': 'https://logo-design-quizz-app-fronntend-luse4lksm.vercel.app'
-            }
+                'Origin': 'https://logo-design-quizz-app-fronntend-luse4lksm.vercel.app',
+                'Cache-Control': 'no-cache',
+                'Pragma': 'no-cache'
+            },
+            credentials: 'include',
+            mode: 'cors',
+            priority: 'high'
         });
-        
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        
+
         const data = await response.json();
-        leaderboardBody.innerHTML = '';
-        
-        if (data.length === 0) {
-            leaderboardBody.innerHTML = '<tr><td colspan="5">No scores yet!</td></tr>';
+        cachedLeaderboard.set('data', {
+            timestamp: Date.now(),
+            content: data
+        });
+
+    } catch (error) {
+        console.warn('Prefetch failed:', error);
+    } finally {
+        clearTimeout(timeoutId);
+        isFetching = false;
+    }
+}
+
+// Enhanced showLeaderboard with optimized rendering
+async function showLeaderboard() {
+    const leaderboardEl = document.getElementById('leaderboard');
+    const leaderboardBody = document.getElementById('leaderboardBody');
+
+    try {
+        // Show loading state
+        leaderboardEl.style.display = 'block';
+        leaderboardBody.innerHTML = '<tr><td colspan="5"><div class="loader"></div></td></tr>';
+
+        // Check cache first
+        const cached = cachedLeaderboard.get('data');
+        if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
+            renderLeaderboard(cached.content);
             return;
         }
 
-        data.forEach((result, index) => {
-            const row = document.createElement('tr');
-            
-            // Format the completion time
-            const completionTimeStr = formatTime(result.completionTime);
-            
-            // Add a performance indicator
-            const performance = `Score: ${result.score}/5 in ${completionTimeStr}`;
-            
-            row.innerHTML = `
-                <td>${index + 1}</td>
-                <td>${result.name || 'Anonymous'}</td>
-                <td>${result.score}/5</td>
-                <td>${completionTimeStr}</td>
-                <td>${new Date(result.submittedAt).toLocaleString('en-IN')}</td>
-            `;
-            
-            // Highlight top performers
-            if (index === 0) {
-                row.style.backgroundColor = '#ffd700'; // Gold for first place
-            } else if (index === 1) {
-                row.style.backgroundColor = '#c0c0c0'; // Silver for second
-            } else if (index === 2) {
-                row.style.backgroundColor = '#cd7f32'; // Bronze for third
-            }
-            
-            leaderboardBody.appendChild(row);
+        // Fetch new data with timeout
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 3000);
+
+        const response = await fetch(`${SERVER_URL}/api/leaderboard`, {
+            signal: controller.signal,
+            headers: {
+                'Origin': 'https://logo-design-quizz-app-fronntend-luse4lksm.vercel.app',
+                'Cache-Control': 'no-cache'
+            },
+            credentials: 'include'
         });
+
+        clearTimeout(timeoutId);
+
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+        
+        const data = await response.json();
+        
+        // Update cache
+        cachedLeaderboard.set('data', {
+            timestamp: Date.now(),
+            content: data
+        });
+
+        // Optimized rendering using DocumentFragment
+        renderLeaderboard(data);
+
     } catch (error) {
         console.error('Leaderboard error:', error);
         leaderboardBody.innerHTML = `
             <tr>
-                <td colspan="5">Error connecting to server. Please try again.</td>
+                <td colspan="5">
+                    ${cached ? 'Using cached data...' : 'Error loading data. Retrying...'}
+                </td>
             </tr>`;
+        
+        // If error, use cached data if available
+        if (cached) {
+            setTimeout(() => renderLeaderboard(cached.content), 1000);
+        }
     }
 }
 
-function hideLeaderboard() {
-    document.getElementById('leaderboard').style.display = 'none';
-    document.getElementById('nameInput').style.display = 'block';
-    document.getElementById('quizSection').style.display = 'none';
-    document.querySelector('.quiz-container h2').style.display = 'block';
-    document.getElementById('question1').style.display = 'block';
-    // Show the leaderboard button when returning to home
-    document.querySelector('.corner-button').style.display = 'block';
-}
+// Optimized rendering function
+function renderLeaderboard(data) {
+    const fragment = document.createDocumentFragment();
+    const leaderboardBody = document.getElementById('leaderboardBody');
 
-function formatTime(seconds) {
-    if (!seconds || isNaN(seconds)) {
-        return '--:--';
+    // Clear existing content
+    while (leaderboardBody.firstChild) {
+        leaderboardBody.removeChild(leaderboardBody.firstChild);
     }
-    const minutes = Math.floor(seconds / 60);
-    const remainingSeconds = Math.floor(seconds % 60);
-    return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
-}
 
-// Modify the showLeaderboardFromHome function
-async function showLeaderboardFromHome() {
-    document.getElementById('nameInput').style.display = 'none';
-    document.getElementById('quizSection').style.display = 'block';
-    // Hide all question divs
-    document.querySelectorAll('.question').forEach(question => {
-        question.style.display = 'none';
+    // Batch create rows
+    requestAnimationFrame(() => {
+        data.forEach((result, index) => {
+            const row = document.createElement('tr');
+            
+            // Use innerHTML for faster insertion
+            row.innerHTML = `
+                <td>${index + 1}</td>
+                <td>${result.name || 'Anonymous'}</td>
+                <td>${result.score}/5</td>
+                <td>${formatTime(result.completionTime)}</td>
+                <td>${new Date(result.submittedAt).toLocaleString('en-IN')}</td>
+            `;
+
+            // Add performance classes
+            if (index < 3) {
+                row.className = `rank-${index + 1}`;
+            }
+
+            fragment.appendChild(row);
+        });
+
+        // Single DOM update
+        leaderboardBody.appendChild(fragment);
     });
-    // Hide the quiz title
-    document.querySelector('.quiz-container h2').style.display = 'none';
-    await showLeaderboard();
 }
+
+// Initialize preloading when page loads
+document.addEventListener('DOMContentLoaded', preloadLeaderboard);
+
+// Add this CSS for better loading state
+const styles = `
+    .loader {
+        width: 20px;
+        height: 20px;
+        border: 2px solid #f3f3f3;
+        border-top: 2px solid #FF6B6B;
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+        margin: 10px auto;
+    }
+
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+
+    .rank-1 { background: linear-gradient(to right, #ffd70033, transparent); }
+    .rank-2 { background: linear-gradient(to right, #c0c0c033, transparent); }
+    .rank-3 { background: linear-gradient(to right, #cd7f3233, transparent); }
+`;
+
+// Add styles to document
+const styleSheet = document.createElement("style");
+styleSheet.textContent = styles;
+document.head.appendChild(styleSheet);
 
 // Add window load event listener
 window.onload = function() {
