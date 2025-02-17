@@ -90,7 +90,17 @@
 
         <!-- Add new leaderboard section -->
         <div id="leaderboard" style="display: none;">
-            <h3>Top Scores</h3>
+            <div class="leaderboard-header">
+                <h3>Top Scores</h3>
+                <div class="leaderboard-buttons">
+                    <button onclick="refreshLeaderboard()" class="refresh-btn">
+                        🔄 Refresh Scores
+                    </button>
+                    <button onclick="startNewQuiz()" class="new-quiz-btn">
+                        Start New Quiz
+                    </button>
+                </div>
+            </div>
             <table id="leaderboardTable">
                 <thead>
                     <tr>
@@ -104,7 +114,6 @@
                 <tbody id="leaderboardBody">
                 </tbody>
             </table>
-            <button onclick="hideLeaderboard()">Close Leaderboard</button>
         </div>
     </div>
 
@@ -112,6 +121,17 @@
         let startTime;
         let playerName = '';
         let correctAnswers = 0;
+
+        // Check for saved state on page load
+        window.onload = function() {
+            const savedState = localStorage.getItem('quizState');
+            if (savedState === 'leaderboard') {
+                document.getElementById('nameInput').style.display = 'none';
+                document.getElementById('quizSection').style.display = 'block';
+                document.getElementById('result').style.display = 'block';
+                showLeaderboard();
+            }
+        };
 
         function startQuiz() {
             playerName = document.getElementById('playerName').value.trim();
@@ -230,8 +250,10 @@
                 const response = await fetch(`${serverUrl}/api/save-result`, {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json'
+                        'Content-Type': 'application/json',
+                        'Origin': 'https://logo-design-quizz-app-fronntend-luse4lksm.vercel.app'
                     },
+                    credentials: 'include',
                     body: JSON.stringify({
                         name: playerName,
                         score: correctAnswers,
@@ -256,12 +278,20 @@
 
         async function showLeaderboard() {
             try {
+                // Save the state
+                localStorage.setItem('quizState', 'leaderboard');
+                
                 const leaderboardBody = document.getElementById('leaderboardBody');
                 leaderboardBody.innerHTML = '<tr><td colspan="5">Loading...</td></tr>';
                 document.getElementById('leaderboard').style.display = 'block';
 
                 const serverUrl = 'https://logo-design-quizzapp.onrender.com';
-                const response = await fetch(`${serverUrl}/api/leaderboard`);
+                const response = await fetch(`${serverUrl}/api/leaderboard`, {
+                    credentials: 'include',
+                    headers: {
+                        'Origin': 'https://logo-design-quizz-app-fronntend-luse4lksm.vercel.app'
+                    }
+                });
                 
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
@@ -278,49 +308,29 @@
                 data.forEach((result, index) => {
                     const row = document.createElement('tr');
                     
-                    // Format the entry time
-                    let entryTimeStr = 'No entry time';
-                    let submittedTimeStr = 'No submission time';
+                    // Format the completion time
+                    const completionTimeStr = formatTime(result.completionTime);
                     
-                    try {
-                        if (result.entryTime) {
-                            const entryDate = new Date(result.entryTime);
-                            if (!isNaN(entryDate.getTime())) {
-                                entryTimeStr = entryDate.toLocaleString('en-IN', {
-                                    day: '2-digit',
-                                    month: '2-digit',
-                                    year: 'numeric',
-                                    hour: '2-digit',
-                                    minute: '2-digit',
-                                    hour12: true
-                                });
-                            }
-                        }
-                        if (result.submittedAt) {
-                            const submitDate = new Date(result.submittedAt);
-                            if (!isNaN(submitDate.getTime())) {
-                                submittedTimeStr = submitDate.toLocaleString('en-IN', {
-                                    hour: '2-digit',
-                                    minute: '2-digit',
-                                    hour12: true
-                                });
-                            }
-                        }
-                    } catch (e) {
-                        console.error('Date parsing error:', e);
-                    }
-
-                    // Format completion time
-                    const completionTimeStr = result.completionTime ? 
-                        formatTime(result.completionTime) : '--:--';
+                    // Add a performance indicator
+                    const performance = `Score: ${result.score}/5 in ${completionTimeStr}`;
                     
                     row.innerHTML = `
                         <td>${index + 1}</td>
                         <td>${result.name || 'Anonymous'}</td>
-                        <td>${result.score}</td>
+                        <td>${result.score}/5</td>
                         <td>${completionTimeStr}</td>
-                        <td>${entryTimeStr} - ${submittedTimeStr}</td>
+                        <td>${new Date(result.submittedAt).toLocaleString('en-IN')}</td>
                     `;
+                    
+                    // Highlight top performers
+                    if (index === 0) {
+                        row.style.backgroundColor = '#ffd700'; // Gold for first place
+                    } else if (index === 1) {
+                        row.style.backgroundColor = '#c0c0c0'; // Silver for second
+                    } else if (index === 2) {
+                        row.style.backgroundColor = '#cd7f32'; // Bronze for third
+                    }
+                    
                     leaderboardBody.appendChild(row);
                 });
             } catch (error) {
@@ -334,6 +344,7 @@
 
         function hideLeaderboard() {
             document.getElementById('leaderboard').style.display = 'none';
+            localStorage.removeItem('quizState'); // Clear the state when hiding
         }
 
         function formatTime(seconds) {
@@ -343,6 +354,17 @@
             const minutes = Math.floor(seconds / 60);
             const remainingSeconds = Math.floor(seconds % 60);
             return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+        }
+
+        // Add a new function to start a new quiz
+        function startNewQuiz() {
+            localStorage.removeItem('quizState');
+            location.reload();
+        }
+
+        // Add a refresh button to the leaderboard
+        function refreshLeaderboard() {
+            showLeaderboard();
         }
     </script>
 
@@ -379,6 +401,40 @@
 
         #leaderboardTable tr:hover {
             background-color: #ddd;
+        }
+
+        .leaderboard-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .leaderboard-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .refresh-btn, .new-quiz-btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .refresh-btn {
+            background-color: #4CAF50;
+            color: white;
+        }
+
+        .new-quiz-btn {
+            background-color: #2196F3;
+            color: white;
+        }
+
+        .refresh-btn:hover, .new-quiz-btn:hover {
+            opacity: 0.9;
         }
     </style>
 </body>
