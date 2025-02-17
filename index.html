@@ -226,7 +226,7 @@
             try {
                 console.log('Saving result for:', playerName, 'Score:', correctAnswers, 'Time:', completionTime);
                 
-                const serverUrl = 'http://127.0.0.1:3000';
+                const serverUrl = 'https://logo-design-quizzapp.onrender.com';
                 const response = await fetch(`${serverUrl}/api/save-result`, {
                     method: 'POST',
                     headers: {
@@ -236,7 +236,7 @@
                         name: playerName,
                         score: correctAnswers,
                         completionTime: completionTime,
-                        entryTime: startTime // Send the entry time
+                        entryTime: startTime
                     })
                 });
 
@@ -260,7 +260,7 @@
                 leaderboardBody.innerHTML = '<tr><td colspan="5">Loading...</td></tr>';
                 document.getElementById('leaderboard').style.display = 'block';
 
-                const serverUrl = 'http://127.0.0.1:3000';
+                const serverUrl = 'https://logo-design-quizzapp.onrender.com';
                 const response = await fetch(`${serverUrl}/api/leaderboard`);
                 
                 if (!response.ok) {
