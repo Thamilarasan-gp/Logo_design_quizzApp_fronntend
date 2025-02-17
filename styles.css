@@ -608,7 +608,7 @@ button:hover {
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    z-index: 1000;
+    z-index: 1001;
     background: var(--white);
     border-radius: 16px;
     box-shadow: var(--shadow);
@@ -1157,8 +1157,6 @@ input:focus {
     left: 0;
     right: 0;
     bottom: 0;
-    background: rgba(0, 0, 0, 0.5);
-    z-index: 999;
-    display: none;
-    animation: fadeIn 0.3s ease;
+    background: rgba(0, 0, 0, 0.8); /* Darker background to better hide content */
+    z-index: 1000;
 }
