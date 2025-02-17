@@ -228,72 +228,136 @@ function debounce(func, wait) {
     };
 }
 
+// Constants
+const SERVER_URL = 'https://logo-design-quizzapp.onrender.com';
+
 // Optimized leaderboard fetch
 async function fetchLeaderboard() {
-    const now = Date.now();
-    
-    // Return cached data if it's fresh
-    if (cachedLeaderboard && (now - lastFetchTime < CACHE_DURATION)) {
-        return cachedLeaderboard;
-    }
-
     try {
-        const response = await fetch('/api/leaderboard');
-        if (!response.ok) throw new Error('Network response was not ok');
-        
+        // Show loading state
+        const leaderboardBody = document.getElementById('leaderboardBody');
+        leaderboardBody.innerHTML = '<tr><td colspan="5"><div class="loading-spinner"></div></td></tr>';
+
+        const response = await fetch(`${SERVER_URL}/api/leaderboard`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Origin': 'https://logo-design-quizz-app-fronntend-luse4lksm.vercel.app'
+            },
+            credentials: 'include'
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
         const data = await response.json();
-        cachedLeaderboard = data;
-        lastFetchTime = now;
+        renderLeaderboard(data);
         return data;
+
     } catch (error) {
         console.error('Error fetching leaderboard:', error);
-        return cachedLeaderboard || []; // Fallback to cached data or empty array
+        const leaderboardBody = document.getElementById('leaderboardBody');
+        leaderboardBody.innerHTML = `
+            <tr>
+                <td colspan="5" style="color: #FF6B6B; text-align: center; padding: 20px;">
+                    Failed to load leaderboard. Please try again.
+                </td>
+            </tr>`;
     }
 }
 
-// Optimized leaderboard render
+// Optimized render function
 function renderLeaderboard(data) {
-    // Create document fragment for better performance
+    const leaderboardBody = document.getElementById('leaderboardBody');
     const fragment = document.createDocumentFragment();
-    
-    data.forEach((entry, index) => {
+
+    // Sort data by score (descending) and time (ascending)
+    const sortedData = data.sort((a, b) => {
+        if (b.score !== a.score) return b.score - a.score;
+        return a.completionTime - b.completionTime;
+    });
+
+    sortedData.forEach((entry, index) => {
         const row = document.createElement('tr');
         
-        // Use template literals for faster string concatenation
+        // Add ranking class for top 3
+        if (index < 3) {
+            row.className = `rank-${index + 1}`;
+        }
+
         row.innerHTML = `
             <td>${index + 1}</td>
-            <td>${entry.name}</td>
-            <td>${entry.score}</td>
-            <td>${entry.time}s</td>
-            <td>${new Date(entry.date).toLocaleDateString()}</td>
+            <td>${entry.name || 'Anonymous'}</td>
+            <td>${entry.score}/5</td>
+            <td>${formatTime(entry.completionTime)}</td>
+            <td>${formatDate(entry.submittedAt)}</td>
         `;
-        
+
         fragment.appendChild(row);
     });
 
-    // Single DOM update
     leaderboardBody.innerHTML = '';
     leaderboardBody.appendChild(fragment);
 }
 
-// Optimized show/hide functions with animations
-function showLeaderboard() {
-    if (leaderboardEl.style.display === 'none') {
-        // Add loading state
-        leaderboardEl.classList.add('loading');
-        leaderboardEl.style.display = 'block';
-        
-        // Fetch and render data
-        fetchLeaderboard()
-            .then(data => {
-                renderLeaderboard(data);
-                // Remove loading state after render
-                requestAnimationFrame(() => {
-                    leaderboardEl.classList.remove('loading');
-                });
-            });
-    }
+// Helper function to format time
+function formatTime(seconds) {
+    return `${seconds}s`;
 }
+
+// Helper function to format date
+function formatDate(dateString) {
+    return new Date(dateString).toLocaleString('en-IN', {
+        day: '2-digit',
+        month: 'short',
+        hour: '2-digit',
+        minute: '2-digit'
+    });
+}
+
+// Show leaderboard function
+async function showLeaderboard() {
+    const leaderboardEl = document.getElementById('leaderboard');
+    leaderboardEl.style.display = 'block';
+    await fetchLeaderboard();
+}
+
+// Add this CSS for better loading state
+const styles = `
+    .loading-spinner {
+        width: 30px;
+        height: 30px;
+        border: 3px solid #f3f3f3;
+        border-top: 3px solid #FF6B6B;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        margin: 20px auto;
+    }
+
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+
+    .rank-1 { background: rgba(255, 215, 0, 0.1); font-weight: 600; }
+    .rank-2 { background: rgba(192, 192, 192, 0.1); font-weight: 600; }
+    .rank-3 { background: rgba(205, 127, 50, 0.1); font-weight: 600; }
+
+    #leaderboardTable tr {
+        transition: all 0.3s ease;
+    }
+
+    #leaderboardTable tr:hover {
+        background: rgba(255, 107, 107, 0.05);
+        transform: translateX(5px);
+    }
+`;
+
+// Add styles to document
+const styleSheet = document.createElement("style");
+styleSheet.textContent = styles;
+document.head.appendChild(styleSheet);
 
 // Debounced version for frequent calls
 const debouncedShowLeaderboard = debounce(showLeaderboard, 300);
