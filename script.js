@@ -432,3 +432,28 @@ function hideLeaderboard() {
         }
     }, 300);
 }
+
+// Function to show leaderboard from home page
+function showLeaderboardFromHome() {
+    const welcomeContainer = document.getElementById('nameInput');
+    const quizSection = document.getElementById('quizSection');
+    const leaderboardEl = document.getElementById('leaderboard');
+
+    // Hide welcome container
+    welcomeContainer.style.display = 'none';
+    
+    // Show quiz section (needed because leaderboard is inside it)
+    quizSection.style.display = 'block';
+    
+    // Show leaderboard with fade-in
+    leaderboardEl.style.opacity = '0';
+    leaderboardEl.style.display = 'block';
+    
+    // Trigger fade-in
+    setTimeout(() => {
+        leaderboardEl.style.opacity = '1';
+    }, 10);
+
+    // Fetch and display data
+    fetchLeaderboard();
+}
