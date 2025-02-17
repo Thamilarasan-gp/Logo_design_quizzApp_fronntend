@@ -210,243 +210,225 @@ const leaderboardBody = document.getElementById('leaderboardBody');
 const quizSection = document.getElementById('quizSection');
 const nameInput = document.getElementById('nameInput');
 
-// Cache leaderboard data
-let cachedLeaderboard = null;
-let lastFetchTime = 0;
-const CACHE_DURATION = 30000; // 30 seconds
+// Constants and cache
+const SERVER_URL = 'https://logo-design-quizzapp.onrender.com';
+const CACHE_KEY = 'leaderboardCache';
+const CACHE_DURATION = 3000; // 3 seconds cache
+let cachedData = null;
+let isFetching = false;
+let prefetchTimer = null;
 
-// Debounce function
-function debounce(func, wait) {
-    let timeout;
-    return function executedFunction(...args) {
-        const later = () => {
-            clearTimeout(timeout);
-            func(...args);
-        };
-        clearTimeout(timeout);
-        timeout = setTimeout(later, wait);
-    };
+// Preload and background sync
+function initializeLeaderboard() {
+    // Initial prefetch
+    prefetchData();
+    
+    // Background sync every 3 seconds if tab is visible
+    prefetchTimer = setInterval(() => {
+        if (document.visibilityState === 'visible') {
+            prefetchData();
+        }
+    }, CACHE_DURATION);
 }
 
-// Constants
-const SERVER_URL = 'https://logo-design-quizzapp.onrender.com';
+// Optimized prefetch
+async function prefetchData() {
+    if (isFetching) return;
+    isFetching = true;
 
-// Optimized leaderboard fetch
-async function fetchLeaderboard() {
     try {
-        // Show loading state
-        const leaderboardBody = document.getElementById('leaderboardBody');
-        leaderboardBody.innerHTML = '<tr><td colspan="5"><div class="loading-spinner"></div></td></tr>';
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 2000);
 
         const response = await fetch(`${SERVER_URL}/api/leaderboard`, {
-            method: 'GET',
+            signal: controller.signal,
             headers: {
                 'Content-Type': 'application/json',
-                'Origin': 'https://logo-design-quizz-app-fronntend-luse4lksm.vercel.app'
+                'Cache-Control': 'no-cache',
+                'Pragma': 'no-cache'
             },
-            credentials: 'include'
+            credentials: 'include',
+            priority: 'high'
         });
 
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
+        clearTimeout(timeoutId);
+        
+        if (!response.ok) throw new Error('Network response was not ok');
+        
+        const data = await response.json();
+        cachedData = data;
+        
+        // If leaderboard is visible, update it
+        if (document.getElementById('leaderboard').style.display !== 'none') {
+            renderLeaderboard(data);
         }
 
-        const data = await response.json();
-        renderLeaderboard(data);
-        return data;
-
     } catch (error) {
-        console.error('Error fetching leaderboard:', error);
-        const leaderboardBody = document.getElementById('leaderboardBody');
+        console.warn('Prefetch failed:', error);
+    } finally {
+        isFetching = false;
+    }
+}
+
+// Enhanced show leaderboard function
+async function showLeaderboard() {
+    const leaderboardEl = document.getElementById('leaderboard');
+    const leaderboardBody = document.getElementById('leaderboardBody');
+
+    // Show immediately with loading state if no cache
+    leaderboardEl.style.display = 'block';
+    
+    // Show cached data first if available
+    if (cachedData) {
+        renderLeaderboard(cachedData);
+    } else {
         leaderboardBody.innerHTML = `
             <tr>
-                <td colspan="5" style="color: #FF6B6B; text-align: center; padding: 20px;">
-                    Failed to load leaderboard. Please try again.
+                <td colspan="5">
+                    <div class="loading-spinner"></div>
                 </td>
             </tr>`;
+    }
+
+    // Fetch fresh data
+    try {
+        const data = await fetchLeaderboard();
+        if (data) {
+            renderLeaderboard(data);
+        }
+    } catch (error) {
+        if (!cachedData) {
+            leaderboardBody.innerHTML = `
+                <tr>
+                    <td colspan="5" class="error-message">
+                        Unable to load leaderboard. Please try again.
+                    </td>
+                </tr>`;
+        }
     }
 }
 
 // Optimized render function
 function renderLeaderboard(data) {
+    if (!data || !data.length) return;
+
     const leaderboardBody = document.getElementById('leaderboardBody');
     const fragment = document.createDocumentFragment();
 
-    // Sort data by score (descending) and time (ascending)
-    const sortedData = data.sort((a, b) => {
-        if (b.score !== a.score) return b.score - a.score;
-        return a.completionTime - b.completionTime;
-    });
+    // Sort once and cache
+    const sortedData = data.sort((a, b) => b.score - a.score || a.completionTime - b.completionTime);
 
-    sortedData.forEach((entry, index) => {
-        const row = document.createElement('tr');
-        
-        // Add ranking class for top 3
-        if (index < 3) {
-            row.className = `rank-${index + 1}`;
+    // Use requestAnimationFrame for smooth rendering
+    requestAnimationFrame(() => {
+        sortedData.forEach((entry, index) => {
+            const row = document.createElement('tr');
+            row.className = `leaderboard-row ${index < 3 ? `rank-${index + 1}` : ''}`;
+            
+            row.innerHTML = `
+                <td>${index + 1}</td>
+                <td>${entry.name || 'Anonymous'}</td>
+                <td>${entry.score}/5 ${index === 0 ? '👑' : ''}</td>
+                <td>${entry.completionTime}s</td>
+                <td>${new Date(entry.submittedAt).toLocaleString('en-IN', {
+                    day: '2-digit',
+                    month: 'short',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                })}</td>
+            `;
+
+            fragment.appendChild(row);
+        });
+
+        leaderboardBody.innerHTML = '';
+        leaderboardBody.appendChild(fragment);
+    });
+}
+
+// Add this CSS for better visual feedback
+const additionalStyles = `
+    .leaderboard-row {
+        animation: slideIn 0.3s ease-out forwards;
+        opacity: 0;
+    }
+
+    @keyframes slideIn {
+        from {
+            opacity: 0;
+            transform: translateX(-10px);
         }
+        to {
+            opacity: 1;
+            transform: translateX(0);
+        }
+    }
 
-        row.innerHTML = `
-            <td>${index + 1}</td>
-            <td>${entry.name || 'Anonymous'}</td>
-            <td>${entry.score}/5</td>
-            <td>${formatTime(entry.completionTime)}</td>
-            <td>${formatDate(entry.submittedAt)}</td>
-        `;
+    .error-message {
+        color: #FF6B6B;
+        text-align: center;
+        padding: 20px;
+        font-weight: 500;
+    }
 
-        fragment.appendChild(row);
-    });
-
-    leaderboardBody.innerHTML = '';
-    leaderboardBody.appendChild(fragment);
-}
-
-// Helper function to format time
-function formatTime(seconds) {
-    return `${seconds}s`;
-}
-
-// Helper function to format date
-function formatDate(dateString) {
-    return new Date(dateString).toLocaleString('en-IN', {
-        day: '2-digit',
-        month: 'short',
-        hour: '2-digit',
-        minute: '2-digit'
-    });
-}
-
-// Show leaderboard function
-async function showLeaderboard() {
-    const leaderboardEl = document.getElementById('leaderboard');
-    leaderboardEl.style.display = 'block';
-    await fetchLeaderboard();
-}
-
-// Add this CSS for better loading state
-const styles = `
     .loading-spinner {
         width: 30px;
         height: 30px;
         border: 3px solid #f3f3f3;
         border-top: 3px solid #FF6B6B;
         border-radius: 50%;
-        animation: spin 1s linear infinite;
+        animation: spin 0.8s linear infinite;
         margin: 20px auto;
-    }
-
-    @keyframes spin {
-        0% { transform: rotate(0deg); }
-        100% { transform: rotate(360deg); }
-    }
-
-    .rank-1 { background: rgba(255, 215, 0, 0.1); font-weight: 600; }
-    .rank-2 { background: rgba(192, 192, 192, 0.1); font-weight: 600; }
-    .rank-3 { background: rgba(205, 127, 50, 0.1); font-weight: 600; }
-
-    #leaderboardTable tr {
-        transition: all 0.3s ease;
-    }
-
-    #leaderboardTable tr:hover {
-        background: rgba(255, 107, 107, 0.05);
-        transform: translateX(5px);
     }
 `;
 
-// Add styles to document
-const styleSheet = document.createElement("style");
-styleSheet.textContent = styles;
-document.head.appendChild(styleSheet);
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', initializeLeaderboard);
 
-// Debounced version for frequent calls
-const debouncedShowLeaderboard = debounce(showLeaderboard, 300);
-
-function hideLeaderboard() {
-    leaderboardEl.classList.add('fade-out');
-    setTimeout(() => {
-        leaderboardEl.style.display = 'none';
-        leaderboardEl.classList.remove('fade-out');
-    }, 300);
-}
-
-// Optimized score submission
-async function submitScore(name, score, time) {
-    try {
-        const response = await fetch('/api/submit-score', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ name, score, time }),
-        });
-
-        if (!response.ok) throw new Error('Score submission failed');
-
-        // Invalidate cache to show new score immediately
-        cachedLeaderboard = null;
-        
-        return true;
-    } catch (error) {
-        console.error('Error submitting score:', error);
-        return false;
+// Cleanup on page unload
+window.addEventListener('unload', () => {
+    if (prefetchTimer) {
+        clearInterval(prefetchTimer);
     }
-}
+});
 
-// Add these CSS classes for smooth transitions
-const additionalCSS = `
+// Add this CSS for better loading state
+const styles = `
     #leaderboard {
         transition: opacity 0.3s ease;
-    }
-
-    #leaderboard.loading {
-        opacity: 0.7;
-        pointer-events: none;
     }
 
     #leaderboard.fade-out {
         opacity: 0;
     }
-
-    .leaderboard-row {
-        opacity: 0;
-        animation: fadeInRow 0.3s ease forwards;
-    }
-
-    @keyframes fadeInRow {
-        from { opacity: 0; transform: translateY(10px); }
-        to { opacity: 1; transform: translateY(0); }
-    }
 `;
 
-// Modify the showLeaderboardFromHome function
-async function showLeaderboardFromHome() {
-    document.getElementById('nameInput').style.display = 'none';
-    document.getElementById('quizSection').style.display = 'block';
-    // Hide all question divs
-    document.querySelectorAll('.question').forEach(question => {
-        question.style.display = 'none';
-    });
-    // Hide the quiz title
-    document.querySelector('.quiz-container h2').style.display = 'none';
-    await showLeaderboard();
+// Add the styles to the document
+const styleSheet = document.createElement("style");
+styleSheet.textContent = styles;
+document.head.appendChild(styleSheet);
+
+// Function to hide leaderboard and show welcome page
+function hideLeaderboard() {
+    const leaderboardEl = document.getElementById('leaderboard');
+    const welcomeContainer = document.getElementById('nameInput');
+    const quizSection = document.getElementById('quizSection');
+
+    // Add fade-out animation
+    leaderboardEl.classList.add('fade-out');
+
+    // After animation, hide leaderboard and show correct page
+    setTimeout(() => {
+        leaderboardEl.style.display = 'none';
+        leaderboardEl.classList.remove('fade-out');
+
+        // If quiz hasn't started, show welcome page
+        if (!quizStarted) {
+            welcomeContainer.style.display = 'block';
+            quizSection.style.display = 'none';
+        } else {
+            // If quiz is in progress, show quiz section
+            welcomeContainer.style.display = 'none';
+            quizSection.style.display = 'block';
+        }
+    }, 300);
 }
-
-// Add window load event listener
-window.onload = function() {
-    if (!loadQuizState()) {
-        // If no saved state, show initial screen
-        document.getElementById('nameInput').style.display = 'block';
-        document.getElementById('quizSection').style.display = 'none';
-        document.querySelector('.corner-button').style.display = 'block';
-    }
-};
-
-// Add beforeunload event listener to warn before reload
-window.addEventListener('beforeunload', function(e) {
-    const savedState = localStorage.getItem('quizState');
-    if (savedState) {
-        e.preventDefault();
-        e.returnValue = '';
-    }
-});
