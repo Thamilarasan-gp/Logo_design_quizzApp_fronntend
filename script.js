@@ -408,6 +408,7 @@ styleSheet.textContent = styles;
 document.head.appendChild(styleSheet);
 
 // Function to hide leaderboard and show welcome page
+// Function to hide leaderboard and show welcome page
 function hideLeaderboard() {
     const leaderboardEl = document.getElementById('leaderboard');
     const welcomeContainer = document.getElementById('nameInput');
@@ -416,23 +417,19 @@ function hideLeaderboard() {
     // Add fade-out animation
     leaderboardEl.classList.add('fade-out');
 
-    // After animation, hide leaderboard and show correct page
+    // After animation, hide leaderboard and show welcome page
     setTimeout(() => {
         leaderboardEl.style.display = 'none';
         leaderboardEl.classList.remove('fade-out');
 
-        // If quiz hasn't started, show welcome page
-        if (!quizStarted) {
-            welcomeContainer.style.display = 'block';
-            quizSection.style.display = 'none';
-        } else {
-            // If quiz is in progress, show quiz section
-            welcomeContainer.style.display = 'none';
-            quizSection.style.display = 'block';
-        }
+        // Always show welcome page when closing from home leaderboard
+        welcomeContainer.style.display = 'block';
+        quizSection.style.display = 'none';
+        
+        // Show corner button again
+        document.querySelector('.corner-button').style.display = 'block';
     }, 300);
 }
-
 // Function to show leaderboard from home page
 function showLeaderboardFromHome() {
     const welcomeContainer = document.getElementById('nameInput');
