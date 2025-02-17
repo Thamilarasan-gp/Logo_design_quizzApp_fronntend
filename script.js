@@ -270,48 +270,42 @@ async function prefetchData() {
     }
 }
 
-// Function to show leaderboard from home page
-function showLeaderboardFromHome() {
-    const welcomeContainer = document.getElementById('nameInput');
-    const quizSection = document.getElementById('quizSection');
-    const leaderboardEl = document.getElementById('leaderboard');
-
-    // Hide other sections
-    welcomeContainer.style.display = 'none';
-    quizSection.style.display = 'none';
-
-    // Show leaderboard with fade-in
-    leaderboardEl.style.opacity = '0';
-    leaderboardEl.style.display = 'block';
-    
-    // Trigger fade-in
-    setTimeout(() => {
-        leaderboardEl.style.opacity = '1';
-    }, 10);
-
-    // Fetch and display data
-    fetchLeaderboard();
-}
-
-// Function to show leaderboard after quiz
+// Enhanced show leaderboard function
 async function showLeaderboard() {
     const leaderboardEl = document.getElementById('leaderboard');
-    const quizSection = document.getElementById('quizSection');
+    const leaderboardBody = document.getElementById('leaderboardBody');
 
-    // Hide quiz section
-    quizSection.style.display = 'none';
-
-    // Show leaderboard with fade-in
-    leaderboardEl.style.opacity = '0';
+    // Show immediately with loading state if no cache
     leaderboardEl.style.display = 'block';
     
-    // Trigger fade-in
-    setTimeout(() => {
-        leaderboardEl.style.opacity = '1';
-    }, 10);
+    // Show cached data first if available
+    if (cachedData) {
+        renderLeaderboard(cachedData);
+    } else {
+        leaderboardBody.innerHTML = `
+            <tr>
+                <td colspan="5">
+                    <div class="loading-spinner"></div>
+                </td>
+            </tr>`;
+    }
 
-    // Fetch and display data
-    await fetchLeaderboard();
+    // Fetch fresh data
+    try {
+        const data = await fetchLeaderboard();
+        if (data) {
+            renderLeaderboard(data);
+        }
+    } catch (error) {
+        if (!cachedData) {
+            leaderboardBody.innerHTML = `
+                <tr>
+                    <td colspan="5" class="error-message">
+                        Unable to load leaderboard. Please try again.
+                    </td>
+                </tr>`;
+        }
+    }
 }
 
 // Optimized render function
@@ -397,7 +391,7 @@ window.addEventListener('unload', () => {
     }
 });
 
-// Update the styles
+// Add this CSS for better loading state
 const styles = `
     #leaderboard {
         transition: opacity 0.3s ease;
@@ -405,21 +399,6 @@ const styles = `
 
     #leaderboard.fade-out {
         opacity: 0;
-    }
-
-    .loading-spinner {
-        width: 30px;
-        height: 30px;
-        border: 3px solid #f3f3f3;
-        border-top: 3px solid #FF6B6B;
-        border-radius: 50%;
-        animation: spin 0.8s linear infinite;
-        margin: 20px auto;
-    }
-
-    @keyframes spin {
-        0% { transform: rotate(0deg); }
-        100% { transform: rotate(360deg); }
     }
 `;
 
