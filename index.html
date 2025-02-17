@@ -119,29 +119,66 @@
         let startTime;
         let playerName = '';
         let correctAnswers = 0;
+        let currentQuestion = 1;
 
+        // Add this function to save quiz state
+        function saveQuizState() {
+            localStorage.setItem('quizState', JSON.stringify({
+                playerName,
+                startTime,
+                correctAnswers,
+                currentQuestion,
+                isQuizStarted: true
+            }));
+        }
+
+        // Add this function to load quiz state
+        function loadQuizState() {
+            const savedState = localStorage.getItem('quizState');
+            if (savedState) {
+                const state = JSON.parse(savedState);
+                playerName = state.playerName;
+                startTime = state.startTime;
+                correctAnswers = state.correctAnswers;
+                currentQuestion = state.currentQuestion;
+
+                if (state.isQuizStarted) {
+                    document.getElementById('nameInput').style.display = 'none';
+                    document.getElementById('quizSection').style.display = 'block';
+                    document.querySelector('.corner-button').style.display = 'none';
+                    
+                    // Hide all questions except current
+                    document.querySelectorAll('.question').forEach(question => {
+                        question.style.display = 'none';
+                    });
+                    document.getElementById(`question${currentQuestion}`).style.display = 'block';
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        // Modify startQuiz function
         function startQuiz() {
             playerName = document.getElementById('playerName').value.trim();
             if (!playerName) {
                 alert('Please enter your name');
                 return;
             }
-            startTime = Date.now(); // Start timing when quiz begins
+            startTime = Date.now();
+            currentQuestion = 1;
+            correctAnswers = 0;
             document.getElementById('nameInput').style.display = 'none';
             document.getElementById('quizSection').style.display = 'block';
-            // Hide the leaderboard button when quiz starts
             document.querySelector('.corner-button').style.display = 'none';
+            saveQuizState();
         }
 
+        // Modify checkAnswer function
         function checkAnswer(questionNumber, correctAnswer) {
             const userAnswer = document.getElementById(`answer${questionNumber}`).value.trim();
             
-            // Convert both to lowercase for comparison
-            const correctLower = correctAnswer.toLowerCase();
-            const userLower = userAnswer.toLowerCase();
-            
-            // Check for exact match first
-            if (userLower === correctLower) {
+            if (userAnswer.toLowerCase() === correctAnswer.toLowerCase()) {
                 correctAnswers++;
                 document.getElementById(`question${questionNumber}`).style.display = 'none';
                 
@@ -149,9 +186,12 @@
                     const endTime = Date.now();
                     const completionTime = Math.max(0, Math.floor((endTime - startTime) / 1000));
                     document.getElementById('result').style.display = 'block';
+                    localStorage.removeItem('quizState'); // Clear state on completion
                     saveResult(completionTime);
                 } else {
-                    document.getElementById(`question${questionNumber + 1}`).style.display = 'block';
+                    currentQuestion = questionNumber + 1;
+                    document.getElementById(`question${currentQuestion}`).style.display = 'block';
+                    saveQuizState();
                 }
                 return;
             }
@@ -161,10 +201,10 @@
             let matchedChars = 0;
             
             // If answer is one word, do character matching
-            if (!correctLower.includes(' ')) {
+            if (!correctAnswer.toLowerCase().includes(' ')) {
                 // Count matching characters from the start
-                for (let i = 0; i < userLower.length && i < correctLower.length; i++) {
-                    if (userLower[i] === correctLower[i]) {
+                for (let i = 0; i < userAnswer.length && i < correctAnswer.length; i++) {
+                    if (userAnswer[i] === correctAnswer[i]) {
                         matchedChars++;
                     } else {
                         break; // Stop counting at first mismatch
@@ -173,19 +213,19 @@
 
                 if (matchedChars > 0) {
                     feedback = `Matched ${matchedChars} character${matchedChars > 1 ? 's' : ''}. `;
-                    feedback += `${correctLower.length - matchedChars} character${correctLower.length - matchedChars > 1 ? 's' : ''} remaining.`;
+                    feedback += `${correctAnswer.length - matchedChars} character${correctAnswer.length - matchedChars > 1 ? 's' : ''} remaining.`;
                 } else {
                     feedback = 'No matching characters. Try again!';
                 }
 
                 // Add length hint if lengths don't match
-                if (userLower.length !== correctLower.length) {
-                    feedback += `\nHint: The answer has ${correctLower.length} characters.`;
+                if (userAnswer.length !== correctAnswer.length) {
+                    feedback += `\nHint: The answer has ${correctAnswer.length} characters.`;
                 }
             } else {
                 // For multi-word answers, use the existing word matching logic
-                const correctWords = correctLower.split(' ');
-                const userWords = userLower.split(' ');
+                const correctWords = correctAnswer.split(' ');
+                const userWords = userAnswer.split(' ');
                 let matchedWords = 0;
 
                 userWords.forEach(word => {
@@ -361,6 +401,25 @@
             document.querySelector('.quiz-container h2').style.display = 'none';
             await showLeaderboard();
         }
+
+        // Add window load event listener
+        window.onload = function() {
+            if (!loadQuizState()) {
+                // If no saved state, show initial screen
+                document.getElementById('nameInput').style.display = 'block';
+                document.getElementById('quizSection').style.display = 'none';
+                document.querySelector('.corner-button').style.display = 'block';
+            }
+        };
+
+        // Add beforeunload event listener to warn before reload
+        window.addEventListener('beforeunload', function(e) {
+            const savedState = localStorage.getItem('quizState');
+            if (savedState) {
+                e.preventDefault();
+                e.returnValue = '';
+            }
+        });
     </script>
 
     <style>
