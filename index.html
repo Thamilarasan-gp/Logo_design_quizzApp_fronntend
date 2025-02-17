@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz - Fizz xo Solutions</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Name Input Section -->
+    <div id="nameInput" class="container">
+        <h2>Welcome to Quiz!</h2>
+        <input type="text" id="playerName" placeholder="Enter your name">
+        <button onclick="startQuiz()">Start Quiz</button>
+    </div>
+
+    <!-- Quiz Section -->
+    <div class="quiz-container" id="quizSection" style="display: none;">
+        <h2>Fill-in-the-Blank Quiz</h2>
+        
+        <div class="question" id="question1">
+            <p>1. This field involves the study of computer systems, networks, and software development, and is essential for modern communication and business operations. It also plays a key role in cybersecurity and data management _________</p>
+            <ul class="options">
+                <li>This field is essential for businesses adapting to the digital age.</li>
+                <li>Professionals in this field work with software and networking systems</li>
+                <li>It encompasses various disciplines like software engineering, database management, and information security.</li>
+                <li>It is a rapidly growing field with a broad range of career opportunities.</li>
+            </ul>
+            <p class="hint">(Hint: It's the short name for the backbone of technology that powers everything around us)</p>
+            <input type="text" id="answer1" placeholder="Your answer here...">
+            <button onclick="checkAnswer(1, 'IT')">Submit</button>
+        </div>
+
+        <div class="question" id="question2" style="display: none;">
+            <p>2. It's where small ideas become big successes, where risk meets innovation. This is called a _____.</p>
+            <ul class="options">
+                <li>A) Ideation Den (Great for ideas, not execution)</li>
+                <li>B) Growth Pod (Focuses on scaling, not starting)</li>
+                <li>C) Creator's Vault (Where ideas are stored, not grown)</li>
+                <li>D) Dream Factory (Sounds magical but not realistic)</li>
+            </ul>
+            <p class="hint">(Hint: Think about the place where famous tech giants were born—like Swiggy and Zomato.This is starting Point of Big giants company)</p>
+            <input type="text" id="answer2" placeholder="Your answer here...">
+            <button onclick="checkAnswer(2, 'Startup')">Submit</button>
+        </div>
+
+        <div class="question" id="question3" style="display: none;">
+            <p>3. This refers to an organization that produces goods or services and sells them to customers, often with the goal of making a profit. It can be small or large, and may be publicly or privately owned.. This is called a _____.</p>
+            <ul class="options">
+                <li>It typically has employees who work toward a common goal</li>
+                <li>This entity is often formed to carry out business activities.</li>
+                <li>It is usually registered with the government for legal and tax purposes.</li>
+                <li>It's the common term for any organization that builds and delivers products or services</li>
+            </ul>
+            <p class="hint">(Hint: In this field, we often talk about "products" and "services" that are offered to the market.)</p>
+            <input type="text" id="answer3" placeholder="Your answer here...">
+            <button onclick="checkAnswer(3, 'Company')">Submit</button>
+        </div>
+
+        <div class="question" id="question4" style="display: none;">
+            <p>4. It's fun, energetic, and playful, perfect for a modern tech startup. Which name fits this vibe?</p>
+            <ul class="options">
+                <li>This company name contains the word "Fizz," symbolizing energy and creativity.</li>
+                <li>The word "XO" in the name may symbolize a connection or partnership.</li>
+                <li>It specializes in offering business solutions, digital transformation, and consulting services.</li>
+                <li>It operates in the technology and consulting industry, helping clients achieve growth and innovation.</li>
+            </ul>
+            <p class="hint">(Hint: Think of something that centers around 'xo' and has a bubbly, exciting feel—like it starts with fizz in a drink. )</p>
+            <input type="text" id="answer4" placeholder="Your answer here...">
+            <button onclick="checkAnswer(4, 'Fizz xo Solutions')">Submit</button>
+        </div>
+
+        <div class="question" id="question5" style="display: none;">
+            <p>5. It's the silent communicator of a brand's identity, instantly recognizable without a word. For a startup like Fizzo Solutions, this would be its _____.</p>
+            <ul class="options">
+                <li>A) Brand Symbol (Represents but isn't visual)</li>
+                <li>B) Visual Tag (Identifies but isn't iconic)</li>
+                <li>C) Identity Mark (Leaves an impression but lacks design)</li>
+                <li>D) Signature Crest (Traditional, not modern)</li>
+            </ul>
+            <p class="hint">(Hint: It's the face of the brand, like the swoosh for Nike or the bitten apple for Apple)</p>
+            <input type="text" id="answer5" placeholder="Your answer here...">
+            <button onclick="checkAnswer(5, 'Logo')">Submit</button>
+        </div>
+
+        <div class="question" id="result" style="display: none;">
+            <h3>Congratulations! You completed the quiz!</h3>
+            <button onclick="showLeaderboard()">View Leaderboard</button>
+        </div>
+
+        <!-- Add new leaderboard section -->
+        <div id="leaderboard" style="display: none;">
+            <h3>Top Scores</h3>
+            <table id="leaderboardTable">
+                <thead>
+                    <tr>
+                        <th>Rank</th>
+                        <th>Name</th>
+                        <th>Score</th>
+                        <th>Time</th>
+                        <th>Date</th>
+                    </tr>
+                </thead>
+                <tbody id="leaderboardBody">
+                </tbody>
+            </table>
+            <button onclick="hideLeaderboard()">Close Leaderboard</button>
+        </div>
+    </div>
+
+    <script>
+        let startTime;
+        let playerName = '';
+        let correctAnswers = 0;
+
+        function startQuiz() {
+            playerName = document.getElementById('playerName').value.trim();
+            if (!playerName) {
+                alert('Please enter your name');
+                return;
+            }
+            startTime = Date.now(); // Start timing when quiz begins
+            document.getElementById('nameInput').style.display = 'none';
+            document.getElementById('quizSection').style.display = 'block';
+        }
+
+        function checkAnswer(questionNumber, correctAnswer) {
+            const userAnswer = document.getElementById(`answer${questionNumber}`).value.trim();
+            
+            // Convert both to lowercase for comparison
+            const correctLower = correctAnswer.toLowerCase();
+            const userLower = userAnswer.toLowerCase();
+            
+            // Check for exact match first
+            if (userLower === correctLower) {
+                correctAnswers++;
+                document.getElementById(`question${questionNumber}`).style.display = 'none';
+                
+                if (questionNumber === 5) {
+                    const endTime = Date.now();
+                    const completionTime = Math.max(0, Math.floor((endTime - startTime) / 1000));
+                    document.getElementById('result').style.display = 'block';
+                    saveResult(completionTime);
+                } else {
+                    document.getElementById(`question${questionNumber + 1}`).style.display = 'block';
+                }
+                return;
+            }
+
+            // For partial matches
+            let feedback = '';
+            let matchedChars = 0;
+            
+            // If answer is one word, do character matching
+            if (!correctLower.includes(' ')) {
+                // Count matching characters from the start
+                for (let i = 0; i < userLower.length && i < correctLower.length; i++) {
+                    if (userLower[i] === correctLower[i]) {
+                        matchedChars++;
+                    } else {
+                        break; // Stop counting at first mismatch
+                    }
+                }
+
+                if (matchedChars > 0) {
+                    feedback = `Matched ${matchedChars} character${matchedChars > 1 ? 's' : ''}. `;
+                    feedback += `${correctLower.length - matchedChars} character${correctLower.length - matchedChars > 1 ? 's' : ''} remaining.`;
+                } else {
+                    feedback = 'No matching characters. Try again!';
+                }
+
+                // Add length hint if lengths don't match
+                if (userLower.length !== correctLower.length) {
+                    feedback += `\nHint: The answer has ${correctLower.length} characters.`;
+                }
+            } else {
+                // For multi-word answers, use the existing word matching logic
+                const correctWords = correctLower.split(' ');
+                const userWords = userLower.split(' ');
+                let matchedWords = 0;
+
+                userWords.forEach(word => {
+                    if (correctWords.includes(word)) {
+                        matchedWords++;
+                    }
+                });
+
+                if (matchedWords > 0) {
+                    feedback = `You matched ${matchedWords} word${matchedWords > 1 ? 's' : ''} correctly. `;
+                    feedback += `${correctWords.length - matchedWords} word${correctWords.length - matchedWords > 1 ? 's' : ''} remaining.`;
+                } else {
+                    feedback = 'No matches found. Try again!';
+                }
+
+                if (userWords.length !== correctWords.length) {
+                    feedback += `\nHint: The answer has ${correctWords.length} words.`;
+                }
+            }
+
+            // Show feedback in a more visible way
+            const feedbackDiv = document.createElement('div');
+            feedbackDiv.style.color = matchedChars > 0 ? '#ff9800' : '#f44336';
+            feedbackDiv.style.marginTop = '10px';
+            feedbackDiv.style.padding = '10px';
+            feedbackDiv.style.borderRadius = '5px';
+            feedbackDiv.style.backgroundColor = '#fff3e0';
+            feedbackDiv.textContent = feedback;
+
+            // Remove any existing feedback
+            const existingFeedback = document.querySelector(`#question${questionNumber} .feedback`);
+            if (existingFeedback) {
+                existingFeedback.remove();
+            }
+
+            // Add new feedback
+            feedbackDiv.className = 'feedback';
+            document.getElementById(`answer${questionNumber}`).parentNode.appendChild(feedbackDiv);
+
+            // Clear the feedback after 3 seconds
+            setTimeout(() => {
+                feedbackDiv.remove();
+            }, 3000);
+        }
+
+        async function saveResult(completionTime) {
+            try {
+                console.log('Saving result for:', playerName, 'Score:', correctAnswers, 'Time:', completionTime);
+                
+                const serverUrl = 'http://127.0.0.1:3000';
+                const response = await fetch(`${serverUrl}/api/save-result`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        name: playerName,
+                        score: correctAnswers,
+                        completionTime: completionTime,
+                        entryTime: startTime // Send the entry time
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (response.ok) {
+                    document.getElementById('result').style.display = 'block';
+                    await showLeaderboard();
+                } else {
+                    throw new Error(data.error || 'Failed to save results');
+                }
+            } catch (error) {
+                console.error('Error saving results:', error);
+                alert('Failed to save results: ' + error.message);
+            }
+        }
+
+        async function showLeaderboard() {
+            try {
+                const leaderboardBody = document.getElementById('leaderboardBody');
+                leaderboardBody.innerHTML = '<tr><td colspan="5">Loading...</td></tr>';
+                document.getElementById('leaderboard').style.display = 'block';
+
+                const serverUrl = 'http://127.0.0.1:3000';
+                const response = await fetch(`${serverUrl}/api/leaderboard`);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                leaderboardBody.innerHTML = '';
+                
+                if (data.length === 0) {
+                    leaderboardBody.innerHTML = '<tr><td colspan="5">No scores yet!</td></tr>';
+                    return;
+                }
+
+                data.forEach((result, index) => {
+                    const row = document.createElement('tr');
+                    
+                    // Format the entry time
+                    let entryTimeStr = 'No entry time';
+                    let submittedTimeStr = 'No submission time';
+                    
+                    try {
+                        if (result.entryTime) {
+                            const entryDate = new Date(result.entryTime);
+                            if (!isNaN(entryDate.getTime())) {
+                                entryTimeStr = entryDate.toLocaleString('en-IN', {
+                                    day: '2-digit',
+                                    month: '2-digit',
+                                    year: 'numeric',
+                                    hour: '2-digit',
+                                    minute: '2-digit',
+                                    hour12: true
+                                });
+                            }
+                        }
+                        if (result.submittedAt) {
+                            const submitDate = new Date(result.submittedAt);
+                            if (!isNaN(submitDate.getTime())) {
+                                submittedTimeStr = submitDate.toLocaleString('en-IN', {
+                                    hour: '2-digit',
+                                    minute: '2-digit',
+                                    hour12: true
+                                });
+                            }
+                        }
+                    } catch (e) {
+                        console.error('Date parsing error:', e);
+                    }
+
+                    // Format completion time
+                    const completionTimeStr = result.completionTime ? 
+                        formatTime(result.completionTime) : '--:--';
+                    
+                    row.innerHTML = `
+                        <td>${index + 1}</td>
+                        <td>${result.name || 'Anonymous'}</td>
+                        <td>${result.score}</td>
+                        <td>${completionTimeStr}</td>
+                        <td>${entryTimeStr} - ${submittedTimeStr}</td>
+                    `;
+                    leaderboardBody.appendChild(row);
+                });
+            } catch (error) {
+                console.error('Leaderboard error:', error);
+                leaderboardBody.innerHTML = `
+                    <tr>
+                        <td colspan="5">Error connecting to server. Please try again.</td>
+                    </tr>`;
+            }
+        }
+
+        function hideLeaderboard() {
+            document.getElementById('leaderboard').style.display = 'none';
+        }
+
+        function formatTime(seconds) {
+            if (!seconds || isNaN(seconds)) {
+                return '--:--';
+            }
+            const minutes = Math.floor(seconds / 60);
+            const remainingSeconds = Math.floor(seconds % 60);
+            return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+        }
+    </script>
+
+    <style>
+        /* Add these styles for the leaderboard */
+        #leaderboard {
+            margin-top: 20px;
+            padding: 20px;
+            background-color: #f5f5f5;
+            border-radius: 8px;
+        }
+
+        #leaderboardTable {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+
+        #leaderboardTable th,
+        #leaderboardTable td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        #leaderboardTable th {
+            background-color: #4CAF50;
+            color: white;
+        }
+
+        #leaderboardTable tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+
+        #leaderboardTable tr:hover {
+            background-color: #ddd;
+        }
+    </style>
+</body>
+</html>
