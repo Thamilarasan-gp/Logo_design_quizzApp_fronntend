@@ -3,7 +3,7 @@ let playerName = '';
 let correctAnswers = 0;
 let currentQuestion = 1;
 let timerInterval;
-const QUIZ_TIME_LIMIT = 30; // 2 minutes in seconds
+const QUIZ_TIME_LIMIT = 180; // 2 minutes in seconds
 
 // Function to save quiz state
 function saveQuizState() {
