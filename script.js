@@ -368,15 +368,15 @@ function checkAnswer(questionNumber, correctAnswer) {
     }, 3000);
 }
 
-// Function to validate name format (name_rollno_batchid)
+// Function to validate name format (name_rollno)
 function validateNameFormat(name) {
-    // Regular expression for name_rollno_batchid format
-    const nameFormat = /^[a-zA-Z]+_[a-zA-Z0-9]+_batch[1-4]$/;
+    // Regular expression for name_rollno format where rollno can be alphanumeric
+    const nameFormat = /^[a-zA-Z]+_[a-zA-Z0-9]+$/;
     
     if (!nameFormat.test(name)) {
         return {
             isValid: false,
-            message: 'Please enter your name in format: name_rollno_batchid (Example: thamil_a54h_batch1)'
+            message: 'Please enter your name in format: name_rollno (Example: thamil_a54h or thamil_23It97)'
         };
     }
     
@@ -479,7 +479,7 @@ document.addEventListener('DOMContentLoaded', () => {
 const leaderboardEl = document.getElementById('leaderboard');
 const leaderboardBody = document.getElementById('leaderboardBody');
 const quizSection = document.getElementById('quizSection');
-const nameInput = document.getElementById('playerName');
+const nameInput = document.getElementById('nameInput');
 
 // Constants and cache
 const SERVER_URL = 'https://logo-design-quizzapp.onrender.com';
@@ -725,49 +725,3 @@ function showLeaderboardFromHome() {
     // Fetch and display data
     fetchLeaderboard();
 }
-
-// Update the placeholder in HTML
-nameInput.placeholder = 'Enter as name_rollno_batchid (Example: thamil_a54h_batch1)';
-
-// Add batch schedule information
-const batchInfo = document.createElement('div');
-batchInfo.className = 'batch-info';
-batchInfo.innerHTML = `
-    <h4>Batch Schedules:</h4>
-    <ul>
-        <li>Batch1: 9:00 AM - 10:00 AM</li>
-        <li>Batch2: 10:00 AM - 11:00 AM</li>
-        <li>Batch3: 11:00 AM - 12:00 PM</li>
-        <li>Batch4: 12:00 PM - 1:00 PM</li>
-    </ul>
-`;
-document.querySelector('.welcome-container').insertBefore(batchInfo, nameInput);
-
-// Add styles for batch info
-const styles = document.createElement('style');
-styles.textContent = `
-    .batch-info {
-        background: #f8f9fa;
-        padding: 15px;
-        border-radius: 12px;
-        margin-bottom: 20px;
-        font-size: 14px;
-    }
-
-    .batch-info h4 {
-        color: var(--primary-color);
-        margin: 0 0 10px 0;
-    }
-
-    .batch-info ul {
-        list-style: none;
-        padding: 0;
-        margin: 0;
-    }
-
-    .batch-info li {
-        padding: 5px 0;
-        color: var(--text-light);
-    }
-`;
-document.head.appendChild(styles);
