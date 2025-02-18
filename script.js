@@ -3,7 +3,56 @@ let playerName = '';
 let correctAnswers = 0;
 let currentQuestion = 1;
 let timerInterval;
-const QUIZ_TIME_LIMIT = 180; // 2 minutes in seconds
+const QUIZ_TIME_LIMIT = 18// ... existing code ...
+const express = require('express');
+const app = express();
+
+// Define batch schedules with start time and duration in minutes
+const batchSchedules = {
+    'batch1': { start: '09:00', duration: 60 }, // 60 minutes
+    'batch2': { start: '10:00', duration: 60 },
+    'batch3': { start: '11:00', duration: 60 },
+    'batch4': { start: '12:00', duration: 60 }
+};
+
+// Middleware to check access
+function checkAccess(req, res, next) {
+    const { batchId } = req.query;
+
+    if (!isBatchTimeValid(batchId)) {
+        return res.status(403).send('Access denied. Invalid batch ID or time.');
+    }
+    next();
+}
+
+// Function to validate batch time
+function isBatchTimeValid(batchId) {
+    const currentTime = new Date();
+    const currentHours = currentTime.getHours();
+    const currentMinutes = currentTime.getMinutes();
+    const currentTimeInMinutes = currentHours * 60 + currentMinutes;
+
+    const batch = batchSchedules[batchId];
+    if (!batch) return false;
+
+    const [startHours, startMinutes] = batch.start.split(':').map(Number);
+    const startTimeInMinutes = startHours * 60 + startMinutes;
+    const endTimeInMinutes = startTimeInMinutes + batch.duration;
+
+    return currentTimeInMinutes >= startTimeInMinutes && currentTimeInMinutes <= endTimeInMinutes;
+}
+
+// Route to access the quiz
+app.get('/quiz', checkAccess, (req, res) => {
+    res.send('Welcome to the quiz!');
+});
+
+// Start the server
+app.listen(3000, () => {
+    console.log('Server is running on port 3000');
+});
+
+// ... existing code ...0; // 2 minutes in seconds
 
 // Function to save quiz state
 function saveQuizState() {
@@ -319,15 +368,15 @@ function checkAnswer(questionNumber, correctAnswer) {
     }, 3000);
 }
 
-// Function to validate name format (name_rollno)
+// Function to validate name format (name_rollno_batchid)
 function validateNameFormat(name) {
-    // Regular expression for name_rollno format where rollno can be alphanumeric
-    const nameFormat = /^[a-zA-Z]+_[a-zA-Z0-9]+$/;
+    // Regular expression for name_rollno_batchid format
+    const nameFormat = /^[a-zA-Z]+_[a-zA-Z0-9]+_batch[1-4]$/;
     
     if (!nameFormat.test(name)) {
         return {
             isValid: false,
-            message: 'Please enter your name in format: name_rollno (Example: thamil_a54h or thamil_23It97)'
+            message: 'Please enter your name in format: name_rollno_batchid (Example: thamil_a54h_batch1)'
         };
     }
     
@@ -430,7 +479,7 @@ document.addEventListener('DOMContentLoaded', () => {
 const leaderboardEl = document.getElementById('leaderboard');
 const leaderboardBody = document.getElementById('leaderboardBody');
 const quizSection = document.getElementById('quizSection');
-const nameInput = document.getElementById('nameInput');
+const nameInput = document.getElementById('playerName');
 
 // Constants and cache
 const SERVER_URL = 'https://logo-design-quizzapp.onrender.com';
@@ -676,3 +725,49 @@ function showLeaderboardFromHome() {
     // Fetch and display data
     fetchLeaderboard();
 }
+
+// Update the placeholder in HTML
+nameInput.placeholder = 'Enter as name_rollno_batchid (Example: thamil_a54h_batch1)';
+
+// Add batch schedule information
+const batchInfo = document.createElement('div');
+batchInfo.className = 'batch-info';
+batchInfo.innerHTML = `
+    <h4>Batch Schedules:</h4>
+    <ul>
+        <li>Batch1: 9:00 AM - 10:00 AM</li>
+        <li>Batch2: 10:00 AM - 11:00 AM</li>
+        <li>Batch3: 11:00 AM - 12:00 PM</li>
+        <li>Batch4: 12:00 PM - 1:00 PM</li>
+    </ul>
+`;
+document.querySelector('.welcome-container').insertBefore(batchInfo, nameInput);
+
+// Add styles for batch info
+const styles = document.createElement('style');
+styles.textContent = `
+    .batch-info {
+        background: #f8f9fa;
+        padding: 15px;
+        border-radius: 12px;
+        margin-bottom: 20px;
+        font-size: 14px;
+    }
+
+    .batch-info h4 {
+        color: var(--primary-color);
+        margin: 0 0 10px 0;
+    }
+
+    .batch-info ul {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    .batch-info li {
+        padding: 5px 0;
+        color: var(--text-light);
+    }
+`;
+document.head.appendChild(styles);
