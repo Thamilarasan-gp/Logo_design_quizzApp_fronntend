@@ -341,8 +341,41 @@ function validateNameFormat(name) {
 const queryParams = new URLSearchParams(window.location.search);
 const batchId = queryParams.get('batchId');
 
+// Add batch validation on page load
+document.addEventListener('DOMContentLoaded', () => {
+    if (!batchId) {
+        // Hide quiz elements
+        document.getElementById('playerName').style.display = 'none';
+        document.querySelector('.start-button').style.display = 'none';
+        
+        // Show error message
+        const errorDiv = document.createElement('div');
+        errorDiv.className = 'error-message';
+        errorDiv.style.cssText = `
+            background: #ff6b6b;
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+            text-align: center;
+            font-weight: 500;
+        `;
+        errorDiv.innerHTML = `
+            Invalid access! Please use the correct batch link.<br>
+            Example: https://logo-design-quizz-app-fronntend.vercel.app/?batchId=1Ace3
+        `;
+        document.querySelector('.welcome-container').appendChild(errorDiv);
+        return;
+    }
+});
+
 // Function to start quiz
 async function startQuiz() {
+    if (!batchId) {
+        alert('Please use the correct batch link to access the quiz.');
+        return;
+    }
+    
     playerName = document.getElementById('playerName').value.trim();
     if (!playerName) {
         alert('Please enter your name');
