@@ -76,16 +76,93 @@ async function endQuiz() {
         q.style.display = 'none';
     });
     
-    // Show result
-    document.getElementById('result').style.display = 'block';
+    // Show result with current score
+    const resultDiv = document.getElementById('result');
+    resultDiv.innerHTML = `
+        <h3>Time's up!</h3>
+        <p>Your score: ${correctAnswers}/5</p>
+        <p>Time taken: ${completionTime} seconds</p>
+    `;
+    resultDiv.style.display = 'block';
     
-    // Save result to MongoDB
-    await saveResult(completionTime);
-    
-    // Remove timer display
-    const timerDiv = document.getElementById('timer');
-    if (timerDiv) {
-        timerDiv.remove();
+    try {
+        // Save result to MongoDB
+        const response = await fetch(`${SERVER_URL}/api/save-result`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Origin': 'https://logo-design-quizz-app-fronntend-luse4lksm.vercel.app'
+            },
+            credentials: 'include',
+            body: JSON.stringify({
+                name: playerName,
+                score: correctAnswers,
+                completionTime: completionTime,
+                entryTime: startTime
+            })
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to save results');
+        }
+
+        // Show leaderboard after saving
+        await showLeaderboard();
+        
+        // Show the leaderboard button again
+        document.querySelector('.corner-button').style.display = 'block';
+        
+    } catch (error) {
+        console.error('Error saving results:', error);
+        resultDiv.innerHTML += `
+            <p style="color: #ff4444;">Failed to save results. Please try again.</p>
+            <button onclick="retrySaveResult(${completionTime})">Retry Save</button>
+        `;
+    } finally {
+        // Remove timer display
+        const timerDiv = document.getElementById('timer');
+        if (timerDiv) {
+            timerDiv.remove();
+        }
+        
+        // Clear quiz state
+        localStorage.removeItem('quizState');
+    }
+}
+
+// Add retry function for failed saves
+async function retrySaveResult(completionTime) {
+    try {
+        const response = await fetch(`${SERVER_URL}/api/save-result`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Origin': 'https://logo-design-quizz-app-fronntend-luse4lksm.vercel.app'
+            },
+            credentials: 'include',
+            body: JSON.stringify({
+                name: playerName,
+                score: correctAnswers,
+                completionTime: completionTime,
+                entryTime: startTime
+            })
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to save results');
+        }
+
+        // Show success message and leaderboard
+        document.getElementById('result').innerHTML = `
+            <h3>Results saved successfully!</h3>
+            <p>Your score: ${correctAnswers}/5</p>
+            <p>Time taken: ${completionTime} seconds</p>
+        `;
+        await showLeaderboard();
+        
+    } catch (error) {
+        console.error('Error in retry save:', error);
+        alert('Failed to save results. Please try again.');
     }
 }
 
@@ -285,42 +362,6 @@ function loadQuizState() {
 document.addEventListener('DOMContentLoaded', () => {
     loadQuizState();
 });
-
-async function saveResult(completionTime) {
-    try {
-        console.log('Saving result for:', playerName, 'Score:', correctAnswers, 'Time:', completionTime);
-        
-        const serverUrl = 'https://logo-design-quizzapp.onrender.com';
-        const response = await fetch(`${serverUrl}/api/save-result`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Origin': 'https://logo-design-quizz-app-fronntend-luse4lksm.vercel.app'
-            },
-            credentials: 'include',
-            body: JSON.stringify({
-                name: playerName,
-                score: correctAnswers,
-                completionTime: completionTime,
-                entryTime: startTime
-            })
-        });
-
-        const data = await response.json();
-        
-        if (response.ok) {
-            document.getElementById('result').style.display = 'block';
-            // Show the leaderboard button again after quiz completion
-            document.querySelector('.corner-button').style.display = 'block';
-            await showLeaderboard();
-        } else {
-            throw new Error(data.error || 'Failed to save results');
-        }
-    } catch (error) {
-        console.error('Error saving results:', error);
-        alert('Failed to save results: ' + error.message);
-    }
-}
 
 // Cache DOM elements
 const leaderboardEl = document.getElementById('leaderboard');
