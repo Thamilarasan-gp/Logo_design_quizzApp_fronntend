@@ -108,12 +108,36 @@ function checkAnswer(questionNumber, correctAnswer) {
     }, 3000);
 }
 
+// Function to validate name format (name_rollno)
+function validateNameFormat(name) {
+    // Regular expression for name_rollno format
+    const nameFormat = /^[a-zA-Z]+_[0-9]+$/;
+    
+    if (!nameFormat.test(name)) {
+        return {
+            isValid: false,
+            message: 'Please enter your name in format: name_rollno (Example: john_123)'
+        };
+    }
+    
+    return {
+        isValid: true,
+        message: ''
+    };
+}
 
 // Function to start quiz
 async function startQuiz() {
     playerName = document.getElementById('playerName').value.trim();
     if (!playerName) {
         alert('Please enter your name');
+        return;
+    }
+
+    // Validate name format
+    const validation = validateNameFormat(playerName);
+    if (!validation.isValid) {
+        alert(validation.message);
         return;
     }
 
@@ -140,7 +164,7 @@ async function startQuiz() {
             throw new Error(data.error || 'Failed to validate name');
         }
 
-        // Start quiz if name is unique
+        // Start quiz if name is unique and format is valid
         startTime = Date.now();
         currentQuestion = 1;
         correctAnswers = 0;
