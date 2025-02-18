@@ -729,14 +729,19 @@ async function prefetchData() {
 }
 
 // Function to show leaderboard with view all option
-async function showLeaderboard(viewAll = false) {
+async function showLeaderboard(viewAll = false, fromHome = false) {
     const leaderboardEl = document.getElementById('leaderboard');
     const resultDiv = document.getElementById('result');
     const quizSection = document.getElementById('quizSection');
+    const nameInput = document.getElementById('nameInput');
 
-    // Hide quiz section and result
-    if (quizSection) quizSection.style.display = 'none';
-    if (resultDiv) resultDiv.style.display = 'none';
+    // Hide appropriate sections
+    if (fromHome) {
+        nameInput.style.display = 'none';
+    } else {
+        if (quizSection) quizSection.style.display = 'none';
+        if (resultDiv) resultDiv.style.display = 'none';
+    }
 
     // Show leaderboard
     leaderboardEl.style.display = 'block';
@@ -780,7 +785,7 @@ async function showLeaderboard(viewAll = false) {
         const viewAllButton = document.createElement('button');
         viewAllButton.className = 'view-all-button';
         viewAllButton.innerHTML = viewAll ? 'Show Less' : 'View All';
-        viewAllButton.onclick = () => showLeaderboard(!viewAll);
+        viewAllButton.onclick = () => showLeaderboard(!viewAll, fromHome);
         viewAllButton.style.cssText = `
             margin: 10px auto;
             display: block;
@@ -893,25 +898,5 @@ function hideLeaderboard() {
 }
 // Function to show leaderboard from home page
 function showLeaderboardFromHome() {
-    const welcomeContainer = document.getElementById('nameInput');
-    const quizSection = document.getElementById('quizSection');
-    const leaderboardEl = document.getElementById('leaderboard');
-
-    // Hide welcome container
-    welcomeContainer.style.display = 'none';
-    
-    // Show quiz section (needed because leaderboard is inside it)
-    quizSection.style.display = 'block';
-    
-    // Show leaderboard with fade-in
-    leaderboardEl.style.opacity = '0';
-    leaderboardEl.style.display = 'block';
-    
-    // Trigger fade-in
-    setTimeout(() => {
-        leaderboardEl.style.opacity = '1';
-    }, 10);
-
-    // Fetch and display data
-    fetchLeaderboard();
+    showLeaderboard(false, true);
 }
