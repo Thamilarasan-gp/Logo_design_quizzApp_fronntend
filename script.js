@@ -219,18 +219,18 @@ function checkAnswer(questionNumber, correctAnswer) {
                         break;
                     }
                 }
-                return { chars, answer };
+                return { chars, totalChars: answer.length };
             } else {
                 // For multi-word answers (Information Technology)
                 const userWords = userAnswer.toUpperCase().split(' ');
-                const correctWords = answer.toUpperCase().split(' ');
+                const correctWords = answer.split(' ');
                 let matchedWords = 0;
                 userWords.forEach(word => {
-                    if (correctWords.includes(word)) {
+                    if (correctWords.map(w => w.toUpperCase()).includes(word)) {
                         matchedWords++;
                     }
                 });
-                return { words: matchedWords, answer };
+                return { words: matchedWords, totalWords: correctWords.length };
             }
         }).reduce((best, current) => {
             if (current.chars > (best.chars || 0)) return current;
@@ -239,12 +239,11 @@ function checkAnswer(questionNumber, correctAnswer) {
         }, {});
 
         if (bestMatch.chars) {
-            feedback = `Matched ${bestMatch.chars} character${bestMatch.chars > 1 ? 's' : ''} with "${bestMatch.answer}". `;
-            feedback += `${bestMatch.answer.length - bestMatch.chars} character${bestMatch.answer.length - bestMatch.chars > 1 ? 's' : ''} remaining.`;
+            feedback = `Matched ${bestMatch.chars} character${bestMatch.chars > 1 ? 's' : ''}. `;
+            feedback += `${bestMatch.totalChars - bestMatch.chars} character${bestMatch.totalChars - bestMatch.chars > 1 ? 's' : ''} remaining.`;
         } else if (bestMatch.words) {
-            const totalWords = bestMatch.answer.split(' ').length;
-            feedback = `Matched ${bestMatch.words} word${bestMatch.words > 1 ? 's' : ''} with "${bestMatch.answer}". `;
-            feedback += `${totalWords - bestMatch.words} word${totalWords - bestMatch.words > 1 ? 's' : ''} remaining.`;
+            feedback = `Matched ${bestMatch.words} word${bestMatch.words > 1 ? 's' : ''}. `;
+            feedback += `${bestMatch.totalWords - bestMatch.words} word${bestMatch.totalWords - bestMatch.words > 1 ? 's' : ''} remaining.`;
         } else {
             feedback = 'No matches found. Try again!';
         }
@@ -283,7 +282,7 @@ function checkAnswer(questionNumber, correctAnswer) {
             });
 
             if (matchedWords > 0) {
-                feedback = `You matched ${matchedWords} word${matchedWords > 1 ? 's' : ''} correctly. `;
+                feedback = `Matched ${matchedWords} word${matchedWords > 1 ? 's' : ''}. `;
                 feedback += `${correctWords.length - matchedWords} word${correctWords.length - matchedWords > 1 ? 's' : ''} remaining.`;
             } else {
                 feedback = 'No matches found. Try again!';
