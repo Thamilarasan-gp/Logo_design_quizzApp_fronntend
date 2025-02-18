@@ -82,6 +82,9 @@ async function endQuiz() {
         <h3>Time's up!</h3>
         <p>Your score: ${correctAnswers}/5</p>
         <p>Time taken: ${completionTime} seconds</p>
+        <p id="countdown" style="margin-top: 20px; color: #666;">
+            Leaderboard will appear in 30 seconds...
+        </p>
     `;
     resultDiv.style.display = 'block';
     
@@ -106,11 +109,22 @@ async function endQuiz() {
             throw new Error('Failed to save results');
         }
 
-        // Show leaderboard after saving
-        await showLeaderboard();
+        // Wait 30 seconds before showing leaderboard
+        let timeLeft = 30;
+        const countdownEl = document.getElementById('countdown');
         
-        // Show the leaderboard button again
-        document.querySelector('.corner-button').style.display = 'block';
+        const countdownInterval = setInterval(() => {
+            timeLeft--;
+            if (countdownEl) {
+                countdownEl.textContent = `Leaderboard will appear in ${timeLeft} seconds...`;
+            }
+            
+            if (timeLeft <= 0) {
+                clearInterval(countdownInterval);
+                showLeaderboard();
+                document.querySelector('.corner-button').style.display = 'block';
+            }
+        }, 1000);
         
     } catch (error) {
         console.error('Error saving results:', error);
