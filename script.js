@@ -119,19 +119,14 @@ async function startQuiz() {
 
     // Check if name exists
     try {
-        const response = await fetch(`${SERVER_URL}/api/save-result`, {
+        const response = await fetch(`${SERVER_URL}/api/check-name`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
                 'Origin': 'https://logo-design-quizz-app-fronntend-luse4lksm.vercel.app'
             },
             credentials: 'include',
-            body: JSON.stringify({
-                name: playerName,
-                score: 0,
-                completionTime: 0,
-                entryTime: Date.now()
-            })
+            body: JSON.stringify({ name: playerName })
         });
 
         const data = await response.json();
@@ -156,7 +151,7 @@ async function startQuiz() {
         saveQuizState();
 
     } catch (error) {
-        console.error('Error validating name:', error);
+        console.error('Error checking name:', error);
         alert('Error starting quiz: ' + error.message);
     }
 }
