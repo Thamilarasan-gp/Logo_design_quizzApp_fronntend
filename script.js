@@ -101,10 +101,22 @@ async function endQuiz() {
     const endTime = Date.now();
     const completionTime = Math.floor((endTime - startTime) / 1000);
 
-    // Hide all questions
+    // Hide all questions and show result section
     document.querySelectorAll('.question').forEach(q => {
         q.style.display = 'none';
     });
+    
+    // Show initial results immediately
+    const resultDiv = document.getElementById('result');
+    resultDiv.style.display = 'block';
+    resultDiv.innerHTML = `
+        <h3>Quiz Completed!</h3>
+        <p>Your score: ${correctAnswers}/5</p>
+        <p>Time taken: ${formatTime(completionTime)}</p>
+        <p id="countdown" style="margin-top: 20px; color: #666;">
+            Saving results and loading leaderboard...
+        </p>
+    `;
 
     try {
         const saveData = {
@@ -114,8 +126,6 @@ async function endQuiz() {
             entryTime: startTime,
             batchId: batchId
         };
-
-        console.log('Sending save request:', saveData);
 
         const response = await fetch(`${SERVER_URL}/api/save-result`, {
             method: 'POST',
@@ -128,45 +138,44 @@ async function endQuiz() {
         });
 
         const data = await response.json();
-        console.log('Save response:', data);
 
         if (!response.ok) {
             throw new Error(data.message || 'Failed to save results');
         }
 
-        // Show initial results
-        const resultDiv = document.getElementById('result');
-        resultDiv.style.display = 'block';
+        // Update display after successful save
         resultDiv.innerHTML = `
-            <h3>Time's up!</h3>
+            <h3>Results Saved!</h3>
             <p>Your score: ${correctAnswers}/5</p>
             <p>Time taken: ${formatTime(completionTime)}</p>
-            <p id="countdown">Leaderboard will appear in 30 seconds...</p>
+            <p id="countdown" style="margin-top: 20px; color: #666;">
+                Leaderboard will appear in 30 seconds...
+            </p>
         `;
 
         // Start countdown for leaderboard
         let timeLeft = 30;
-        const countdownEl = document.getElementById('countdown');
-        
         const countdownInterval = setInterval(() => {
-            timeLeft--;
+            const countdownEl = document.getElementById('countdown');
             if (countdownEl) {
+                timeLeft--;
                 countdownEl.textContent = `Leaderboard will appear in ${timeLeft} seconds...`;
-            }
-            
-            if (timeLeft <= 0) {
-                clearInterval(countdownInterval);
-                showLeaderboard();
-                document.querySelector('.corner-button').style.display = 'block';
+                
+                if (timeLeft <= 0) {
+                    clearInterval(countdownInterval);
+                    showLeaderboard();
+                    const cornerButton = document.querySelector('.corner-button');
+                    if (cornerButton) {
+                        cornerButton.style.display = 'block';
+                    }
+                }
             }
         }, 1000);
 
     } catch (error) {
         console.error('Error saving results:', error);
-        const resultDiv = document.getElementById('result');
-        resultDiv.style.display = 'block';
         resultDiv.innerHTML = `
-            <h3>Time's up!</h3>
+            <h3>Quiz Completed!</h3>
             <p>Your score: ${correctAnswers}/5</p>
             <p>Time taken: ${formatTime(completionTime)}</p>
             <p style="color: #ff4444;">Failed to save results. Please try again.</p>
@@ -179,7 +188,7 @@ async function endQuiz() {
             timerDiv.remove();
         }
         
-        // Clear all quiz data
+        // Clear quiz data
         clearQuizData();
     }
 }
