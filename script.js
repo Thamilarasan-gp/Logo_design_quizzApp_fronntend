@@ -33,7 +33,8 @@ function createTimer() {
     timerDiv.style.cssText = `
         position: fixed;
         top: 20px;
-        right: 20px;
+        left: 50%;
+        transform: translateX(-50%);
         background: var(--primary-color);
         color: white;
         padding: 10px 20px;
@@ -149,15 +150,6 @@ async function endQuiz() {
         border-radius: 8px;
         box-shadow: 0 2px 10px rgba(0,0,0,0.1);
     `;
-    
-    resultDiv.innerHTML = `
-        <h3 style="color: #333; margin-bottom: 20px;">Quiz Completed!</h3>
-        <p style="font-size: 18px; margin: 10px 0;">Your score: <strong>${correctAnswers}/5</strong></p>
-        <p style="font-size: 18px; margin: 10px 0;">Time taken: <strong>${formatTime(completionTime)}</strong></p>
-        <p id="countdown" style="margin-top: 20px; color: #666; font-size: 16px;">
-            Saving results and loading leaderboard...
-        </p>
-    `;
 
     try {
         const saveData = {
@@ -183,6 +175,16 @@ async function endQuiz() {
         if (!response.ok) {
             throw new Error(data.message || 'Failed to save results');
         }
+
+        // Clear all storage after successful save
+        localStorage.clear();
+        sessionStorage.clear();
+        
+        // Reset variables
+        startTime = null;
+        playerName = '';
+        correctAnswers = 0;
+        currentQuestion = 1;
 
         // Update display after successful save
         resultDiv.innerHTML = `
@@ -233,6 +235,12 @@ async function endQuiz() {
                 font-size: 16px;
             ">Retry Save</button>
         `;
+    } finally {
+        // Remove timer display
+        const timerDiv = document.getElementById('timer');
+        if (timerDiv) {
+            timerDiv.remove();
+        }
     }
 }
 
