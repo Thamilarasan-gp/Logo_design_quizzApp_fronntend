@@ -3,7 +3,7 @@ let playerName = '';
 let correctAnswers = 0;
 let currentQuestion = 1;
 let timerInterval;
-const QUIZ_TIME_LIMIT = 120; // 2 minutes in seconds
+const QUIZ_TIME_LIMIT = 30; // 2 minutes in seconds
 
 // Function to save quiz state
 function saveQuizState() {
@@ -76,12 +76,19 @@ async function endQuiz() {
         q.style.display = 'none';
     });
     
-    // Show result with current score
+    // Show result with current score and leaderboard button
     const resultDiv = document.getElementById('result');
     resultDiv.innerHTML = `
-        <h3>Time's up!</h3>
-        <p>Your score: ${correctAnswers}/5</p>
-        <p>Time taken: ${completionTime} seconds</p>
+        <div class="final-score">
+            <h3>${timeLeft <= 0 ? "Time's up!" : "Quiz Completed!"}</h3>
+            <div class="score-details">
+                <p class="score">Your Score: ${correctAnswers}/5</p>
+                <p class="time">Time taken: ${completionTime} seconds</p>
+            </div>
+            <button onclick="viewLeaderboard()" class="view-leaderboard-btn">
+                🏆 View Leaderboard
+            </button>
+        </div>
     `;
     resultDiv.style.display = 'block';
     
@@ -105,12 +112,6 @@ async function endQuiz() {
         if (!response.ok) {
             throw new Error('Failed to save results');
         }
-
-        // Show leaderboard after saving
-        await showLeaderboard();
-        
-        // Show the leaderboard button again
-        document.querySelector('.corner-button').style.display = 'block';
         
     } catch (error) {
         console.error('Error saving results:', error);
@@ -129,6 +130,65 @@ async function endQuiz() {
         localStorage.removeItem('quizState');
     }
 }
+
+// Add function to view leaderboard
+function viewLeaderboard() {
+    // Hide result div
+    document.getElementById('result').style.display = 'none';
+    
+    // Show leaderboard
+    showLeaderboard();
+    
+    // Show corner button to go back to welcome page
+    document.querySelector('.corner-button').style.display = 'block';
+}
+
+// Add some CSS for better styling
+const styles = document.createElement('style');
+styles.textContent = `
+    .final-score {
+        text-align: center;
+        padding: 20px;
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+
+    .score-details {
+        margin: 20px 0;
+    }
+
+    .score {
+        font-size: 24px;
+        color: #FF6B6B;
+        font-weight: bold;
+        margin: 10px 0;
+    }
+
+    .time {
+        font-size: 18px;
+        color: #666;
+        margin: 10px 0;
+    }
+
+    .view-leaderboard-btn {
+        background: linear-gradient(135deg, #FF6B6B 0%, #FFD93D 100%);
+        color: white;
+        padding: 12px 24px;
+        border: none;
+        border-radius: 50px;
+        font-size: 16px;
+        font-weight: bold;
+        cursor: pointer;
+        transition: transform 0.3s ease;
+        margin-top: 20px;
+    }
+
+    .view-leaderboard-btn:hover {
+        transform: translateY(-2px);
+    }
+`;
+document.head.appendChild(styles);
 
 // Add retry function for failed saves
 async function retrySaveResult(completionTime) {
