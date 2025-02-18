@@ -145,21 +145,7 @@ async function endQuiz() {
         `;
 
         // Start countdown for leaderboard
-        let timeLeft = 30;
-        const countdownEl = document.getElementById('countdown');
-        
-        const countdownInterval = setInterval(() => {
-            timeLeft--;
-            if (countdownEl) {
-                countdownEl.textContent = `Leaderboard will appear in ${timeLeft} seconds...`;
-            }
-            
-            if (timeLeft <= 0) {
-                clearInterval(countdownInterval);
-                showLeaderboard();
-                document.querySelector('.corner-button').style.display = 'block';
-            }
-        }, 1000);
+        startLeaderboardCountdown(completionTime);
 
     } catch (error) {
         console.error('Error saving results:', error);
@@ -225,21 +211,7 @@ async function retrySaveResult(completionTime) {
         `;
 
         // Start countdown for leaderboard
-        let timeLeft = 30;
-        const countdownEl = document.getElementById('countdown');
-        
-        const countdownInterval = setInterval(() => {
-            timeLeft--;
-            if (countdownEl) {
-                countdownEl.textContent = `Leaderboard will appear in ${timeLeft} seconds...`;
-            }
-            
-            if (timeLeft <= 0) {
-                clearInterval(countdownInterval);
-                showLeaderboard();
-                document.querySelector('.corner-button').style.display = 'block';
-            }
-        }, 1000);
+        startLeaderboardCountdown(completionTime);
 
     } catch (error) {
         console.error('Error in retry save:', error);
@@ -609,82 +581,108 @@ async function prefetchData() {
     }
 }
 
-// Enhanced show leaderboard function
+// Function to show leaderboard
 async function showLeaderboard() {
     const leaderboardEl = document.getElementById('leaderboard');
+    const resultDiv = document.getElementById('result');
+    const quizSection = document.getElementById('quizSection');
+
+    // Hide quiz section and result
+    if (quizSection) quizSection.style.display = 'none';
+    if (resultDiv) resultDiv.style.display = 'none';
+
+    // Show leaderboard
+    leaderboardEl.style.display = 'block';
     const leaderboardBody = document.getElementById('leaderboardBody');
 
-    // Show immediately with loading state if no cache
-    leaderboardEl.style.display = 'block';
-    
-    // Show cached data first if available
-    if (cachedData) {
-        renderLeaderboard(cachedData);
-    } else {
+    try {
+        const response = await fetch(`${SERVER_URL}/api/leaderboard`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Origin': 'https://logo-design-quizz-app-fronntend.vercel.app'
+            },
+            credentials: 'include'
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to fetch leaderboard');
+        }
+
+        const data = await response.json();
+        console.log('Leaderboard data:', data); // Debug log
+        
+        // Clear existing content
+        leaderboardBody.innerHTML = '';
+
+        // Add rows to leaderboard
+        data.forEach((entry, index) => {
+            const row = document.createElement('tr');
+            row.className = 'leaderboard-row';
+            row.innerHTML = `
+                <td>${index + 1}</td>
+                <td>${entry.name}</td>
+                <td>${entry.score}/5</td>
+                <td>${entry.completionTime}s</td>
+                <td>${new Date(entry.submittedAt).toLocaleTimeString()}</td>
+            `;
+            leaderboardBody.appendChild(row);
+        });
+
+        // Add home button if it doesn't exist
+        if (!document.querySelector('.home-button')) {
+            const homeButton = document.createElement('button');
+            homeButton.className = 'home-button';
+            homeButton.innerHTML = 'Take Quiz Again';
+            homeButton.onclick = () => window.location.reload();
+            homeButton.style.cssText = `
+                margin: 20px auto;
+                display: block;
+                padding: 10px 20px;
+                background: var(--primary-color);
+                color: white;
+                border: none;
+                border-radius: 5px;
+                cursor: pointer;
+                font-size: 16px;
+            `;
+            leaderboardEl.appendChild(homeButton);
+        }
+
+        // Show corner button
+        const cornerButton = document.querySelector('.corner-button');
+        if (cornerButton) {
+            cornerButton.style.display = 'block';
+        }
+
+    } catch (error) {
+        console.error('Error fetching leaderboard:', error);
         leaderboardBody.innerHTML = `
             <tr>
-                <td colspan="5">
-                    <div class="loading-spinner"></div>
+                <td colspan="5" style="text-align: center; color: red;">
+                    Failed to load leaderboard. Please try again.
                 </td>
-            </tr>`;
-    }
-
-    // Fetch fresh data
-    try {
-        const data = await fetchLeaderboard();
-        if (data) {
-            renderLeaderboard(data);
-        }
-    } catch (error) {
-        if (!cachedData) {
-            leaderboardBody.innerHTML = `
-                <tr>
-                    <td colspan="5" class="error-message">
-                        Unable to load leaderboard. Please try again.
-                    </td>
-                </tr>`;
-        }
-    } finally {
-        // Clear quiz data when showing leaderboard
-        clearQuizData();
+            </tr>
+        `;
     }
 }
 
-// Optimized render function
-function renderLeaderboard(data) {
-    if (!data || !data.length) return;
-
-    const leaderboardBody = document.getElementById('leaderboardBody');
-    const fragment = document.createDocumentFragment();
-
-    // Sort once and cache
-    const sortedData = data.sort((a, b) => b.score - a.score || a.completionTime - b.completionTime);
-
-    // Use requestAnimationFrame for smooth rendering
-    requestAnimationFrame(() => {
-        sortedData.forEach((entry, index) => {
-            const row = document.createElement('tr');
-            row.className = `leaderboard-row ${index < 3 ? `rank-${index + 1}` : ''}`;
-            
-            row.innerHTML = `
-                <td>${index + 1}</td>
-                <td>${entry.name || 'Anonymous'}</td>
-                <td>${entry.score}/5 ${index === 0 ? '👑' : ''}</td>
-                <td>${entry.completionTime}s</td>
-                <td>${new Date(entry.submittedAt).toLocaleString('en-IN', {
-                    day: '2-digit',
-                    month: 'short',
-                    hour: '2-digit',
-                    minute: '2-digit'
-                })}</td>
-            `;
-
-            fragment.appendChild(row);
-        });
-
-        leaderboardBody.innerHTML = '';
-        leaderboardBody.appendChild(fragment);
-    });
+// Update endQuiz function's countdown part
+function startLeaderboardCountdown(completionTime) {
+    let timeLeft = 30;
+    const countdownEl = document.getElementById('countdown');
+    
+    const countdownInterval = setInterval(() => {
+        timeLeft--;
+        if (countdownEl) {
+            countdownEl.textContent = `Leaderboard will appear in ${timeLeft} seconds...`;
+        }
+        
+        if (timeLeft <= 0) {
+            clearInterval(countdownInterval);
+            showLeaderboard();
+        }
+    }, 1000);
 }
 
 // Add this CSS for better visual feedback
@@ -796,3 +794,35 @@ function showLeaderboardFromHome() {
     // Fetch and display data
     fetchLeaderboard();
 }
+
+// Add CSS for leaderboard rows
+const styles = document.createElement('style');
+styles.textContent = `
+    .leaderboard-row {
+        transition: all 0.3s ease;
+    }
+    .leaderboard-row:nth-child(even) {
+        background-color: #f5f5f5;
+    }
+    .leaderboard-row:hover {
+        background-color: #e9e9e9;
+    }
+    #leaderboard {
+        margin: 20px auto;
+        max-width: 800px;
+    }
+    #leaderboard table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    #leaderboard th, #leaderboard td {
+        padding: 12px;
+        text-align: center;
+        border: 1px solid #ddd;
+    }
+    #leaderboard th {
+        background-color: var(--primary-color);
+        color: white;
+    }
+`;
+document.head.appendChild(styles);
