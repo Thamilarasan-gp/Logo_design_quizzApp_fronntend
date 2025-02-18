@@ -1,17 +1,97 @@
 function checkAnswer(questionNumber, correctAnswer) {
-    const userAnswer = document.getElementById(`answer${questionNumber}`).value.trim();
+    const userAnswer = document.getElementById(answer${questionNumber}).value.trim();
+    
     if (userAnswer.toLowerCase() === correctAnswer.toLowerCase()) {
-        alert('Correct!');
-        document.getElementById(`question${questionNumber}`).style.display = 'none';
-        const nextQuestion = document.getElementById(`question${questionNumber + 1}`);
-        if (nextQuestion) {
-            nextQuestion.style.display = 'block';
-        } else {
+        correctAnswers++;
+        document.getElementById(question${questionNumber}).style.display = 'none';
+        
+        if (questionNumber === 5) {
+            const endTime = Date.now();
+            const completionTime = Math.max(0, Math.floor((endTime - startTime) / 1000));
             document.getElementById('result').style.display = 'block';
+            localStorage.removeItem('quizState'); // Clear state on completion
+            saveResult(completionTime);
+        } else {
+            currentQuestion = questionNumber + 1;
+            document.getElementById(question${currentQuestion}).style.display = 'block';
+            saveQuizState();
+        }
+        return;
+    }
+
+    // For partial matches
+    let feedback = '';
+    let matchedChars = 0;
+    
+    // If answer is one word, do character matching
+    if (!correctAnswer.toLowerCase().includes(' ')) {
+        // Count matching characters from the start
+        for (let i = 0; i < userAnswer.length && i < correctAnswer.length; i++) {
+            if (userAnswer[i] === correctAnswer[i]) {
+                matchedChars++;
+            } else {
+                break; // Stop counting at first mismatch
+            }
+        }
+
+        if (matchedChars > 0) {
+            feedback = Matched ${matchedChars} character${matchedChars > 1 ? 's' : ''}. ;
+            feedback += ${correctAnswer.length - matchedChars} character${correctAnswer.length - matchedChars > 1 ? 's' : ''} remaining.;
+        } else {
+            feedback = 'No matching characters. Try again!';
+        }
+
+        // Add length hint if lengths don't match
+        if (userAnswer.length !== correctAnswer.length) {
+            feedback += \nHint: The answer has ${correctAnswer.length} characters.;
         }
     } else {
-        alert('Incorrect, please try again.');
+        // For multi-word answers, use the existing word matching logic
+        const correctWords = correctAnswer.split(' ');
+        const userWords = userAnswer.split(' ');
+        let matchedWords = 0;
+
+        userWords.forEach(word => {
+            if (correctWords.includes(word)) {
+                matchedWords++;
+            }
+        });
+
+        if (matchedWords > 0) {
+            feedback = You matched ${matchedWords} word${matchedWords > 1 ? 's' : ''} correctly. ;
+            feedback += ${correctWords.length - matchedWords} word${correctWords.length - matchedWords > 1 ? 's' : ''} remaining.;
+        } else {
+            feedback = 'No matches found. Try again!';
+        }
+
+        if (userWords.length !== correctWords.length) {
+            feedback += \nHint: The answer has ${correctWords.length} words.;
+        }
     }
+
+    // Show feedback in a more visible way
+    const feedbackDiv = document.createElement('div');
+    feedbackDiv.style.color = matchedChars > 0 ? '#ff9800' : '#f44336';
+    feedbackDiv.style.marginTop = '10px';
+    feedbackDiv.style.padding = '10px';
+    feedbackDiv.style.borderRadius = '5px';
+    feedbackDiv.style.backgroundColor = '#fff3e0';
+    feedbackDiv.textContent = feedback;
+
+    // Remove any existing feedback
+    const existingFeedback = document.querySelector(#question${questionNumber} .feedback);
+    if (existingFeedback) {
+        existingFeedback.remove();
+    }
+
+    // Add new feedback
+    feedbackDiv.className = 'feedback';
+    document.getElementById(answer${questionNumber}).parentNode.appendChild(feedbackDiv);
+
+    // Clear the feedback after 3 seconds
+    setTimeout(() => {
+        feedbackDiv.remove();
+    }, 3000);
 }
 let startTime;
 let playerName = '';
