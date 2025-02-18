@@ -128,13 +128,7 @@ function clearQuizData() {
 
 // Function to end quiz
 async function endQuiz() {
-    // Clear timer interval and remove timer immediately
     clearInterval(timerInterval);
-    const timerDiv = document.getElementById('timer');
-    if (timerDiv) {
-        timerDiv.remove();
-    }
-
     const endTime = Date.now();
     const completionTime = Math.floor((endTime - startTime) / 1000);
 
@@ -156,12 +150,17 @@ async function endQuiz() {
         border-radius: 8px;
         box-shadow: 0 2px 10px rgba(0,0,0,0.1);
     `;
+    
+    resultDiv.innerHTML = `
+        <h3 style="color: #333; margin-bottom: 20px;">Quiz Completed!</h3>
+        <p style="font-size: 18px; margin: 10px 0;">Your score: <strong>${correctAnswers}/5</strong></p>
+        <p style="font-size: 18px; margin: 10px 0;">Time taken: <strong>${formatTime(completionTime)}</strong></p>
+        <p id="countdown" style="margin-top: 20px; color: #666; font-size: 16px;">
+            Saving results and loading leaderboard...
+        </p>
+    `;
 
     try {
-        // Store the final score before saving
-        const finalScore = correctAnswers;
-        const finalTime = completionTime;
-
         const saveData = {
             name: playerName,
             score: correctAnswers,
@@ -186,31 +185,15 @@ async function endQuiz() {
             throw new Error(data.message || 'Failed to save results');
         }
 
-        // Clear all storage after successful save
-        localStorage.clear();
-        sessionStorage.clear();
-        
-        // Reset variables
-        startTime = null;
-        playerName = '';
-        correctAnswers = 0;
-        currentQuestion = 1;
-
-        // Update display with final values
+        // Update display after successful save
         resultDiv.innerHTML = `
             <h3 style="color: #333; margin-bottom: 20px;">Results Saved!</h3>
-            <p style="font-size: 18px; margin: 10px 0;">Your score: <strong>${finalScore}/5</strong></p>
-            <p style="font-size: 18px; margin: 10px 0;">Time taken: <strong>${formatTime(finalTime)}</strong></p>
+            <p style="font-size: 18px; margin: 10px 0;">Your score: <strong>${correctAnswers}/5</strong></p>
+            <p style="font-size: 18px; margin: 10px 0;">Time taken: <strong>${formatTime(completionTime)}</strong></p>
             <p id="countdown" style="margin-top: 20px; color: #666; font-size: 16px; font-weight: 500;">
                 Leaderboard will appear in 30 seconds...
             </p>
         `;
-
-        // Remove timer display
-        const timerDiv = document.getElementById('timer');
-        if (timerDiv) {
-            timerDiv.remove();
-        }
 
         // Start countdown for leaderboard
         let timeLeft = 30;
@@ -728,107 +711,82 @@ async function prefetchData() {
     }
 }
 
-// Function to show leaderboard with view all option
-async function showLeaderboard(viewAll = false, fromHome = false) {
+// Enhanced show leaderboard function
+async function showLeaderboard() {
     const leaderboardEl = document.getElementById('leaderboard');
-    const resultDiv = document.getElementById('result');
-    const quizSection = document.getElementById('quizSection');
-    const nameInput = document.getElementById('nameInput');
-
-    // Hide appropriate sections
-    if (fromHome) {
-        nameInput.style.display = 'none';
-        quizSection.style.display = 'block'; // Need to show this to display leaderboard
-    } else {
-        if (quizSection) quizSection.style.display = 'none';
-        if (resultDiv) resultDiv.style.display = 'none';
-    }
-
-    // Show leaderboard with fade-in effect
-    leaderboardEl.style.opacity = '0';
-    leaderboardEl.style.display = 'block';
-    setTimeout(() => {
-        leaderboardEl.style.opacity = '1';
-    }, 10);
-
     const leaderboardBody = document.getElementById('leaderboardBody');
-    leaderboardBody.innerHTML = `
-        <tr>
-            <td colspan="5">
-                <div class="loading-spinner"></div>
-            </td>
-        </tr>
-    `;
 
-    try {
-        // Add viewAll parameter to the URL
-        const url = `${SERVER_URL}/api/leaderboard${viewAll ? '?all=true' : ''}`;
-        const response = await fetch(url, {
-            headers: {
-                'Content-Type': 'application/json',
-                'Origin': 'https://logo-design-quizz-app-fronntend.vercel.app'
-            },
-            credentials: 'include'
-        });
-
-        if (!response.ok) {
-            throw new Error('Failed to fetch leaderboard');
-        }
-
-        const data = await response.json();
-        
-        // Clear existing content
-        leaderboardBody.innerHTML = '';
-
-        // Add rows to leaderboard
-        data.forEach((entry, index) => {
-            const row = document.createElement('tr');
-            row.className = 'leaderboard-row';
-            row.innerHTML = `
-                <td>${index + 1}</td>
-                <td>${entry.name}</td>
-                <td>${entry.score}/5</td>
-                <td>${entry.completionTime}s</td>
-                <td>${new Date(entry.submittedAt).toLocaleTimeString()}</td>
-            `;
-            leaderboardBody.appendChild(row);
-        });
-
-        // Add view all/show less button
-        const viewAllButton = document.createElement('button');
-        viewAllButton.className = 'view-all-button';
-        viewAllButton.innerHTML = viewAll ? 'Show Less' : 'View All';
-        viewAllButton.onclick = () => showLeaderboard(!viewAll, fromHome);
-        viewAllButton.style.cssText = `
-            margin: 10px auto;
-            display: block;
-            padding: 8px 16px;
-            background: var(--secondary-color);
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 14px;
-        `;
-        
-        // Remove existing view all button if it exists
-        const existingViewAllBtn = leaderboardEl.querySelector('.view-all-button');
-        if (existingViewAllBtn) {
-            existingViewAllBtn.remove();
-        }
-        
-        leaderboardEl.insertBefore(viewAllButton, leaderboardEl.querySelector('button:last-child'));
-
-    } catch (error) {
-        console.error('Error fetching leaderboard:', error);
+    // Show immediately with loading state if no cache
+    leaderboardEl.style.display = 'block';
+    
+    // Show cached data first if available
+    if (cachedData) {
+        renderLeaderboard(cachedData);
+    } else {
         leaderboardBody.innerHTML = `
             <tr>
-                <td colspan="5" style="text-align: center; color: red;">
-                    Failed to load leaderboard. Please try again.
+                <td colspan="5">
+                    <div class="loading-spinner"></div>
                 </td>
-            </tr>
-        `;
+            </tr>`;
     }
+
+    // Fetch fresh data
+    try {
+        const data = await fetchLeaderboard();
+        if (data) {
+            renderLeaderboard(data);
+        }
+    } catch (error) {
+        if (!cachedData) {
+            leaderboardBody.innerHTML = `
+                <tr>
+                    <td colspan="5" class="error-message">
+                        Unable to load leaderboard. Please try again.
+                    </td>
+                </tr>`;
+        }
+    } finally {
+        // Clear quiz data when showing leaderboard
+        clearQuizData();
+    }
+}
+
+// Optimized render function
+function renderLeaderboard(data) {
+    if (!data || !data.length) return;
+
+    const leaderboardBody = document.getElementById('leaderboardBody');
+    const fragment = document.createDocumentFragment();
+
+    // Sort once and cache
+    const sortedData = data.sort((a, b) => b.score - a.score || a.completionTime - b.completionTime);
+
+    // Use requestAnimationFrame for smooth rendering
+    requestAnimationFrame(() => {
+        sortedData.forEach((entry, index) => {
+            const row = document.createElement('tr');
+            row.className = `leaderboard-row ${index < 3 ? `rank-${index + 1}` : ''}`;
+            
+            row.innerHTML = `
+                <td>${index + 1}</td>
+                <td>${entry.name || 'Anonymous'}</td>
+                <td>${entry.score}/5 ${index === 0 ? '👑' : ''}</td>
+                <td>${entry.completionTime}s</td>
+                <td>${new Date(entry.submittedAt).toLocaleString('en-IN', {
+                    day: '2-digit',
+                    month: 'short',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                })}</td>
+            `;
+
+            fragment.appendChild(row);
+        });
+
+        leaderboardBody.innerHTML = '';
+        leaderboardBody.appendChild(fragment);
+    });
 }
 
 // Add this CSS for better visual feedback
@@ -916,7 +874,60 @@ function hideLeaderboard() {
         document.querySelector('.corner-button').style.display = 'block';
     }, 300);
 }
+
 // Function to show leaderboard from home page
-function showLeaderboardFromHome() {
-    showLeaderboard(false, true);
+async function showLeaderboardFromHome() {
+    const welcomeContainer = document.getElementById('nameInput');
+    const quizSection = document.getElementById('quizSection');
+    const leaderboardEl = document.getElementById('leaderboard');
+
+    // Hide welcome container
+    welcomeContainer.style.display = 'none';
+    
+    // Show quiz section (needed because leaderboard is inside it)
+    quizSection.style.display = 'block';
+    
+    // Show leaderboard with fade-in
+    leaderboardEl.style.opacity = '0';
+    leaderboardEl.style.display = 'block';
+    
+    // Trigger fade-in
+    setTimeout(() => {
+        leaderboardEl.style.opacity = '1';
+    }, 10);
+
+    // Fetch and display data
+    try {
+        const data = await fetchLeaderboard();
+        if (data) {
+            renderLeaderboard(data);
+        }
+    } catch (error) {
+        console.error('Error fetching leaderboard:', error);
+        const leaderboardBody = document.getElementById('leaderboardBody');
+        leaderboardBody.innerHTML = `
+            <tr>
+                <td colspan="5" class="error-message">
+                    Unable to load leaderboard. Please try again.
+                </td>
+            </tr>`;
+    }
+}
+
+// Function to fetch leaderboard data
+async function fetchLeaderboard() {
+    const response = await fetch(`${SERVER_URL}/api/leaderboard`, {
+        headers: {
+            'Content-Type': 'application/json',
+            'Cache-Control': 'no-cache',
+            'Pragma': 'no-cache'
+        },
+        credentials: 'include'
+    });
+
+    if (!response.ok) {
+        throw new Error('Failed to fetch leaderboard');
+    }
+
+    return await response.json();
 }
