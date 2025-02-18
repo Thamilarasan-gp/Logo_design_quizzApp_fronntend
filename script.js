@@ -206,6 +206,12 @@ async function endQuiz() {
             </p>
         `;
 
+        // Remove timer display
+        const timerDiv = document.getElementById('timer');
+        if (timerDiv) {
+            timerDiv.remove();
+        }
+
         // Start countdown for leaderboard
         let timeLeft = 30;
         const countdownInterval = setInterval(() => {
