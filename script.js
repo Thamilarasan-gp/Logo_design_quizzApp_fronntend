@@ -101,19 +101,30 @@ async function endQuiz() {
     const endTime = Date.now();
     const completionTime = Math.floor((endTime - startTime) / 1000);
 
-    // Hide all questions and show result section
+    // Hide all questions
     document.querySelectorAll('.question').forEach(q => {
         q.style.display = 'none';
     });
     
-    // Show initial results immediately
+    // Show quiz section and result div
+    document.getElementById('quizSection').style.display = 'block';
     const resultDiv = document.getElementById('result');
     resultDiv.style.display = 'block';
+    resultDiv.style.cssText = `
+        margin: 20px auto;
+        padding: 20px;
+        max-width: 600px;
+        text-align: center;
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    `;
+    
     resultDiv.innerHTML = `
-        <h3>Quiz Completed!</h3>
-        <p>Your score: ${correctAnswers}/5</p>
-        <p>Time taken: ${formatTime(completionTime)}</p>
-        <p id="countdown" style="margin-top: 20px; color: #666;">
+        <h3 style="color: #333; margin-bottom: 20px;">Quiz Completed!</h3>
+        <p style="font-size: 18px; margin: 10px 0;">Your score: <strong>${correctAnswers}/5</strong></p>
+        <p style="font-size: 18px; margin: 10px 0;">Time taken: <strong>${formatTime(completionTime)}</strong></p>
+        <p id="countdown" style="margin-top: 20px; color: #666; font-size: 16px;">
             Saving results and loading leaderboard...
         </p>
     `;
@@ -145,10 +156,10 @@ async function endQuiz() {
 
         // Update display after successful save
         resultDiv.innerHTML = `
-            <h3>Results Saved!</h3>
-            <p>Your score: ${correctAnswers}/5</p>
-            <p>Time taken: ${formatTime(completionTime)}</p>
-            <p id="countdown" style="margin-top: 20px; color: #666;">
+            <h3 style="color: #333; margin-bottom: 20px;">Results Saved!</h3>
+            <p style="font-size: 18px; margin: 10px 0;">Your score: <strong>${correctAnswers}/5</strong></p>
+            <p style="font-size: 18px; margin: 10px 0;">Time taken: <strong>${formatTime(completionTime)}</strong></p>
+            <p id="countdown" style="margin-top: 20px; color: #666; font-size: 16px; font-weight: 500;">
                 Leaderboard will appear in 30 seconds...
             </p>
         `;
@@ -159,15 +170,18 @@ async function endQuiz() {
             const countdownEl = document.getElementById('countdown');
             if (countdownEl) {
                 timeLeft--;
-                countdownEl.textContent = `Leaderboard will appear in ${timeLeft} seconds...`;
+                countdownEl.innerHTML = `
+                    <span style="display: block; margin-bottom: 10px;">
+                        Redirecting to leaderboard in <strong>${timeLeft}</strong> seconds...
+                    </span>
+                    <div style="width: ${(timeLeft/30)*100}%; height: 4px; background: var(--primary-color); 
+                        border-radius: 2px; margin: 10px auto; transition: width 1s linear;">
+                    </div>
+                `;
                 
                 if (timeLeft <= 0) {
                     clearInterval(countdownInterval);
                     showLeaderboard();
-                    const cornerButton = document.querySelector('.corner-button');
-                    if (cornerButton) {
-                        cornerButton.style.display = 'block';
-                    }
                 }
             }
         }, 1000);
@@ -175,21 +189,20 @@ async function endQuiz() {
     } catch (error) {
         console.error('Error saving results:', error);
         resultDiv.innerHTML = `
-            <h3>Quiz Completed!</h3>
-            <p>Your score: ${correctAnswers}/5</p>
-            <p>Time taken: ${formatTime(completionTime)}</p>
-            <p style="color: #ff4444;">Failed to save results. Please try again.</p>
-            <button onclick="retrySaveResult(${completionTime})" class="retry-button">Retry Save</button>
+            <h3 style="color: #333; margin-bottom: 20px;">Quiz Completed!</h3>
+            <p style="font-size: 18px; margin: 10px 0;">Your score: <strong>${correctAnswers}/5</strong></p>
+            <p style="font-size: 18px; margin: 10px 0;">Time taken: <strong>${formatTime(completionTime)}</strong></p>
+            <p style="color: #ff4444; margin: 20px 0;">Failed to save results. Please try again.</p>
+            <button onclick="retrySaveResult(${completionTime})" class="retry-button" style="
+                padding: 10px 20px;
+                background: var(--primary-color);
+                color: white;
+                border: none;
+                border-radius: 5px;
+                cursor: pointer;
+                font-size: 16px;
+            ">Retry Save</button>
         `;
-    } finally {
-        // Remove timer display
-        const timerDiv = document.getElementById('timer');
-        if (timerDiv) {
-            timerDiv.remove();
-        }
-        
-        // Clear quiz data
-        clearQuizData();
     }
 }
 
@@ -227,10 +240,12 @@ async function retrySaveResult(completionTime) {
         // Show success message and start countdown
         const resultDiv = document.getElementById('result');
         resultDiv.innerHTML = `
-            <h3>Results saved successfully!</h3>
-            <p>Your score: ${correctAnswers}/5</p>
-            <p>Time taken: ${formatTime(completionTime)}</p>
-            <p id="countdown">Leaderboard will appear in 30 seconds...</p>
+            <h3 style="color: #333; margin-bottom: 20px;">Results saved successfully!</h3>
+            <p style="font-size: 18px; margin: 10px 0;">Your score: <strong>${correctAnswers}/5</strong></p>
+            <p style="font-size: 18px; margin: 10px 0;">Time taken: <strong>${formatTime(completionTime)}</strong></p>
+            <p id="countdown" style="margin-top: 20px; color: #666; font-size: 16px; font-weight: 500;">
+                Leaderboard will appear in 30 seconds...
+            </p>
         `;
 
         // Start countdown for leaderboard
@@ -240,7 +255,14 @@ async function retrySaveResult(completionTime) {
         const countdownInterval = setInterval(() => {
             timeLeft--;
             if (countdownEl) {
-                countdownEl.textContent = `Leaderboard will appear in ${timeLeft} seconds...`;
+                countdownEl.innerHTML = `
+                    <span style="display: block; margin-bottom: 10px;">
+                        Redirecting to leaderboard in <strong>${timeLeft}</strong> seconds...
+                    </span>
+                    <div style="width: ${(timeLeft/30)*100}%; height: 4px; background: var(--primary-color); 
+                        border-radius: 2px; margin: 10px auto; transition: width 1s linear;">
+                    </div>
+                `;
             }
             
             if (timeLeft <= 0) {
@@ -255,7 +277,15 @@ async function retrySaveResult(completionTime) {
         const resultDiv = document.getElementById('result');
         resultDiv.innerHTML += `
             <p style="color: #ff4444;">Failed to save results: ${error.message}</p>
-            <button onclick="retrySaveResult(${completionTime})" class="retry-button">Retry Save</button>
+            <button onclick="retrySaveResult(${completionTime})" class="retry-button" style="
+                padding: 10px 20px;
+                background: var(--primary-color);
+                color: white;
+                border: none;
+                border-radius: 5px;
+                cursor: pointer;
+                font-size: 16px;
+            ">Retry Save</button>
         `;
     }
 }
