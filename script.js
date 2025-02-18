@@ -362,7 +362,11 @@ document.addEventListener('DOMContentLoaded', () => {
         `;
         errorDiv.innerHTML = `
             Invalid access! Please use the correct batch link.<br>
-            Example: https://logo-design-quizz-app-fronntend.vercel.app/?batchId=1Ace3
+            Available Batches:<br>
+            Batch 1 (9:00 AM - 10:00 AM): ?batchId=1Ace3<br>
+            Batch 2 (10:00 AM - 11:00 AM): ?batchId=2rgg4<br>
+            Batch 3 (1:00 PM - 2:00 PM): ?batchId=3Hce5<br>
+            Batch 4 (2:00 PM - 3:00 PM): ?batchId=4Kce6
         `;
         document.querySelector('.welcome-container').appendChild(errorDiv);
         return;
