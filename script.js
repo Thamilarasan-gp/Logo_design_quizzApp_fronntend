@@ -337,6 +337,10 @@ function validateNameFormat(name) {
     };
 }
 
+// Get batch ID from URL
+const queryParams = new URLSearchParams(window.location.search);
+const batchId = queryParams.get('batchId');
+
 // Function to start quiz
 async function startQuiz() {
     playerName = document.getElementById('playerName').value.trim();
@@ -353,7 +357,12 @@ async function startQuiz() {
     }
 
     try {
-        const response = await fetch(`${SERVER_URL}/api/check-name`, {
+        // Include batchId in the request if it exists
+        const url = batchId 
+            ? `${SERVER_URL}/api/check-name?batchId=${batchId}`
+            : `${SERVER_URL}/api/check-name`;
+
+        const response = await fetch(url, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -365,6 +374,11 @@ async function startQuiz() {
 
         const data = await response.json();
         
+        if (response.status === 403) {
+            alert('This batch is not currently active. Please use the correct batch link during scheduled time.');
+            return;
+        }
+
         if (response.status === 400 && data.error === 'Name already exists') {
             alert('This name is already taken. Please choose a different name.');
             return;
@@ -374,7 +388,7 @@ async function startQuiz() {
             throw new Error(data.error || 'Failed to validate name');
         }
 
-        // Start quiz if name is unique and format is valid
+        // Start quiz if everything is valid
         startTime = Date.now();
         currentQuestion = 1;
         correctAnswers = 0;
@@ -383,7 +397,6 @@ async function startQuiz() {
         document.querySelector('.corner-button').style.display = 'none';
         document.getElementById(`question${currentQuestion}`).style.display = 'block';
         
-        // Create and start timer
         createTimer();
         startTimer();
         
