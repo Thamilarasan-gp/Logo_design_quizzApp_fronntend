@@ -128,7 +128,13 @@ function clearQuizData() {
 
 // Function to end quiz
 async function endQuiz() {
+    // Clear timer interval and remove timer immediately
     clearInterval(timerInterval);
+    const timerDiv = document.getElementById('timer');
+    if (timerDiv) {
+        timerDiv.remove();
+    }
+
     const endTime = Date.now();
     const completionTime = Math.floor((endTime - startTime) / 1000);
 
@@ -152,6 +158,10 @@ async function endQuiz() {
     `;
 
     try {
+        // Store the final score before saving
+        const finalScore = correctAnswers;
+        const finalTime = completionTime;
+
         const saveData = {
             name: playerName,
             score: correctAnswers,
@@ -186,11 +196,11 @@ async function endQuiz() {
         correctAnswers = 0;
         currentQuestion = 1;
 
-        // Update display after successful save
+        // Update display with final values
         resultDiv.innerHTML = `
             <h3 style="color: #333; margin-bottom: 20px;">Results Saved!</h3>
-            <p style="font-size: 18px; margin: 10px 0;">Your score: <strong>${correctAnswers}/5</strong></p>
-            <p style="font-size: 18px; margin: 10px 0;">Time taken: <strong>${formatTime(completionTime)}</strong></p>
+            <p style="font-size: 18px; margin: 10px 0;">Your score: <strong>${finalScore}/5</strong></p>
+            <p style="font-size: 18px; margin: 10px 0;">Time taken: <strong>${formatTime(finalTime)}</strong></p>
             <p id="countdown" style="margin-top: 20px; color: #666; font-size: 16px; font-weight: 500;">
                 Leaderboard will appear in 30 seconds...
             </p>
@@ -235,12 +245,6 @@ async function endQuiz() {
                 font-size: 16px;
             ">Retry Save</button>
         `;
-    } finally {
-        // Remove timer display
-        const timerDiv = document.getElementById('timer');
-        if (timerDiv) {
-            timerDiv.remove();
-        }
     }
 }
 
