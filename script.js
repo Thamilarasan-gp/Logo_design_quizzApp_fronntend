@@ -110,13 +110,13 @@ function checkAnswer(questionNumber, correctAnswer) {
 
 // Function to validate name format (name_rollno)
 function validateNameFormat(name) {
-    // Regular expression for name_rollno format
-    const nameFormat = /^[a-zA-Z]+_[0-9]+$/;
+    // Regular expression for name_rollno format where rollno can be alphanumeric
+    const nameFormat = /^[a-zA-Z]+_[a-zA-Z0-9]+$/;
     
     if (!nameFormat.test(name)) {
         return {
             isValid: false,
-            message: 'Please enter your name in format: name_rollno (Example: john_123)'
+            message: 'Please enter your name in format: name_rollno (Example: thamil_a54h or thamil_23It97)'
         };
     }
     
