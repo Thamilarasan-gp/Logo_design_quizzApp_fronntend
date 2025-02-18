@@ -12,7 +12,8 @@ function saveQuizState() {
         startTime,
         correctAnswers,
         currentQuestion,
-        isQuizStarted: true
+        isQuizStarted: true,
+        lastUpdated: Date.now()
     }));
 }
 
@@ -23,7 +24,7 @@ function formatTime(seconds) {
     return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
 }
 
-// Add timer display to quiz section
+// Function to create and manage timer
 function createTimer() {
     const timerDiv = document.createElement('div');
     timerDiv.id = 'timer';
@@ -43,15 +44,30 @@ function createTimer() {
         z-index: 1000;
     `;
     document.body.appendChild(timerDiv);
+    return timerDiv;
 }
 
-// Function to start timer
+// Function to start timer with persistence
 function startTimer() {
     let timeLeft = QUIZ_TIME_LIMIT;
-    const timerDiv = document.getElementById('timer');
+    const timerDiv = createTimer();
     
-    timerInterval = setInterval(() => {
-        timeLeft--;
+    // Check if there's a saved timer state
+    const savedState = localStorage.getItem('quizState');
+    if (savedState) {
+        const state = JSON.parse(savedState);
+        const elapsed = Math.floor((Date.now() - state.startTime) / 1000);
+        timeLeft = Math.max(0, QUIZ_TIME_LIMIT - elapsed);
+    }
+
+    function updateTimer() {
+        if (timeLeft <= 0) {
+            clearInterval(timerInterval);
+            timerDiv.remove();
+            endQuiz();
+            return;
+        }
+
         timerDiv.textContent = `Time Left: ${formatTime(timeLeft)}`;
         
         if (timeLeft <= 10) {
@@ -59,9 +75,19 @@ function startTimer() {
             timerDiv.style.backgroundColor = '#ff4444';
         }
         
-        if (timeLeft <= 0) {
-            clearInterval(timerInterval);
-            endQuiz();
+        timeLeft--;
+    }
+
+    // Initial update
+    updateTimer();
+    
+    // Start interval
+    timerInterval = setInterval(updateTimer, 1000);
+
+    // Save timer state periodically
+    setInterval(() => {
+        if (timeLeft > 0) {
+            saveQuizState();
         }
     }, 1000);
 }
