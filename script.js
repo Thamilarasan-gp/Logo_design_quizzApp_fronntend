@@ -184,18 +184,34 @@ async function retrySaveResult(completionTime) {
 function checkAnswer(questionNumber, correctAnswer) {
     const userAnswer = document.getElementById(`answer${questionNumber}`).value.trim();
     
-    if (userAnswer.toLowerCase() === correctAnswer.toLowerCase()) {
-        correctAnswers++;
-        document.getElementById(`question${questionNumber}`).style.display = 'none';
-        
-        if (questionNumber === 5) {
-            endQuiz();
-        } else {
+    // Create array of acceptable answers
+    const acceptableAnswers = ['IT', 'INFORMATION TECHNOLOGY'];
+    
+    // For question 1, check both possible answers
+    if (questionNumber === 1) {
+        if (acceptableAnswers.includes(userAnswer.toUpperCase())) {
+            correctAnswers++;
+            document.getElementById(`question${questionNumber}`).style.display = 'none';
             currentQuestion = questionNumber + 1;
             document.getElementById(`question${currentQuestion}`).style.display = 'block';
             saveQuizState();
+            return;
         }
-        return;
+    } else {
+        // For other questions, use the original logic
+        if (userAnswer.toLowerCase() === correctAnswer.toLowerCase()) {
+            correctAnswers++;
+            document.getElementById(`question${questionNumber}`).style.display = 'none';
+            
+            if (questionNumber === 5) {
+                endQuiz();
+            } else {
+                currentQuestion = questionNumber + 1;
+                document.getElementById(`question${currentQuestion}`).style.display = 'block';
+                saveQuizState();
+            }
+            return;
+        }
     }
 
     // For partial matches
