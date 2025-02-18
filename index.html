@@ -64,69 +64,44 @@
     <div class="quiz-container" id="quizSection" style="display: none;">
         <h2>Fill-in-the-Blank Quiz</h2>
 
-        <div class="question" id="question1">
-            <p>1. This field involves the study of computer systems, networks, and software development, and is essential for modern communication and business operations. It also plays a key role in cybersecurity and data management _________</p>
-            <ul class="options">
-                <li>This field is essential for businesses adapting to the digital age.</li>
-                <li>Professionals in this field work with software and networking systems</li>
-                <li>It encompasses various disciplines like software engineering, database management, and information security.</li>
-                <li>It is a rapidly growing field with a broad range of career opportunities.</li>
-            </ul>
-            <p class="hint">💡Hint: It's the short name for the backbone of technology that powers everything around us</p>
-            <input type="text" id="answer1" placeholder="Your answer here...">
-            <button onclick="checkAnswer(1)">Submit</button>
+        <div id="question1" class="question">
+            <h3>Question 1: What does IT stand for?</h3>
+            <div class="answer-container">
+                <input type="text" id="answer1" class="answer-input" placeholder="Type your answer here...">
+                <button onclick="checkAnswer(1, 'IT')" class="submit-button">Submit</button>
+            </div>
         </div>
 
-        <div class="question" id="question2" style="display: none;">
-            <p>2. It's where small ideas become big successes, where risk meets innovation. This is called a _____.</p>
-            <ul class="options">
-                <li>A) Ideation Den (Great for ideas, not execution)</li>
-                <li>B) Growth Pod (Focuses on scaling, not starting)</li>
-                <li>C) Creator's Vault (Where ideas are stored, not grown)</li>
-                <li>D) Dream Factory (Sounds magical but not realistic)</li>
-            </ul>
-            <p class="hint">💡Hint: Think about the place where famous tech giants were born—like Swiggy and Zomato.This is starting Point of Big giants company</p>
-            <input type="text" id="answer2" placeholder="Your answer here...">
-            <button onclick="checkAnswer(2, 'Startup')">Submit</button>
+        <div id="question2" class="question">
+            <h3>Question 2: It's where small ideas become big successes, where risk meets innovation. This is called a _____.</h3>
+            <div class="answer-container">
+                <input type="text" id="answer2" class="answer-input" placeholder="Type your answer here...">
+                <button onclick="checkAnswer(2, 'Startup')" class="submit-button">Submit</button>
+            </div>
         </div>
 
-        <div class="question" id="question3" style="display: none;">
-            <p>3. This refers to an organization that produces goods or services and sells them to customers, often with the goal of making a profit. It can be small or large, and may be publicly or privately owned.. This is called a _____.</p>
-            <ul class="options">
-                <li>It typically has employees who work toward a common goal</li>
-                <li>This entity is often formed to carry out business activities.</li>
-                <li>It is usually registered with the government for legal and tax purposes.</li>
-                <li>It's the common term for any organization that builds and delivers products or services</li>
-            </ul>
-            <p class="hint">💡Hint: In this field, we often talk about "products" and "services" that are offered to the market.</p>
-            <input type="text" id="answer3" placeholder="Your answer here...">
-            <button onclick="checkAnswer(3, 'Company')">Submit</button>
+        <div id="question3" class="question">
+            <h3>Question 3: This refers to an organization that produces goods or services and sells them to customers, often with the goal of making a profit. It can be small or large, and may be publicly or privately owned.. This is called a _____.</h3>
+            <div class="answer-container">
+                <input type="text" id="answer3" class="answer-input" placeholder="Type your answer here...">
+                <button onclick="checkAnswer(3, 'Company')" class="submit-button">Submit</button>
+            </div>
         </div>
 
-        <div class="question" id="question4" style="display: none;">
-            <p>4. It's fun, energetic, and playful, perfect for a modern tech startup. Which name fits this vibe?</p>
-            <ul class="options">
-                <li>This company name contains the word "Fizz," symbolizing energy and creativity.</li>
-                <li>The word "XO" in the name may symbolize a connection or partnership.</li>
-                <li>It specializes in offering business solutions, digital transformation, and consulting services.</li>
-                <li>It operates in the technology and consulting industry, helping clients achieve growth and innovation.</li>
-            </ul>
-            <p class="hint">💡Hint: Think of something that centers around 'xo' and has a bubbly, exciting feel—like it starts with fizz in a drink. </p>
-            <input type="text" id="answer4" placeholder="Your answer here...">
-            <button onclick="checkAnswer(4, 'Fizz xo Solution')">Submit</button>
+        <div id="question4" class="question">
+            <h3>Question 4: It's fun, energetic, and playful, perfect for a modern tech startup. Which name fits this vibe?</h3>
+            <div class="answer-container">
+                <input type="text" id="answer4" class="answer-input" placeholder="Type your answer here...">
+                <button onclick="checkAnswer(4, 'Fizz xo Solution')" class="submit-button">Submit</button>
+            </div>
         </div>
 
-        <div class="question" id="question5" style="display: none;">
-            <p>5. It's the silent communicator of a brand's identity, instantly recognizable without a word. For a startup like Fizzo Solutions, this would be its _____.</p>
-            <ul class="options">
-                <li>Brand Symbol (Represents but isn't visual)</li>
-                <li>Visual Tag (Identifies but isn't iconic)</li>
-                <li>Identity Mark (Leaves an impression but lacks design)</li>
-                <li>Signature Crest (Traditional, not modern)</li>
-            </ul>
-            <p class="hint">💡Hint: It's the face of the brand, like the swoosh for Nike or the bitten apple for Apple</p>
-            <input type="text" id="answer5" placeholder="Your answer here...">
-            <button onclick="checkAnswer(5, 'Logo')">Submit</button>
+        <div id="question5" class="question">
+            <h3>Question 5: It's the silent communicator of a brand's identity, instantly recognizable without a word. For a startup like Fizzo Solutions, this would be its _____.</h3>
+            <div class="answer-container">
+                <input type="text" id="answer5" class="answer-input" placeholder="Type your answer here...">
+                <button onclick="checkAnswer(5, 'Logo')" class="submit-button">Submit</button>
+            </div>
         </div>
 
         <div class="question" id="result" style="display: none;">
