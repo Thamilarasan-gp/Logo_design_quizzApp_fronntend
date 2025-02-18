@@ -28,7 +28,7 @@
         </div>
 
         <div class="logo-design-section">
-        
+
             <h3 class="design-title">Logo Design Quiz</h3>
         </div>
 
@@ -41,7 +41,7 @@
                 <h3>🏆 Compete</h3>
                 <p>See how you rank against other participants</p>
             </div>
-           
+
         </div>
 
         <input type="text" class="name-input" id="playerName" placeholder="Enter your name to begin">
@@ -63,7 +63,7 @@
     <!-- Quiz Section -->
     <div class="quiz-container" id="quizSection" style="display: none;">
         <h2>Fill-in-the-Blank Quiz</h2>
-        
+
         <div class="question" id="question1">
             <p>1. This field involves the study of computer systems, networks, and software development, and is essential for modern communication and business operations. It also plays a key role in cybersecurity and data management _________</p>
             <ul class="options">
@@ -156,180 +156,16 @@
 
     <script src="script.js"></script>
     <script>
-        async function fetchLeaderboard() {
-            try {
-                const response = await fetch('https://logo-design-quizzapp.onrender.com/api/leaderboard', {
-                    method: 'GET',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    credentials: 'include'
-                });
-
-                if (!response.ok) {
-                    throw new Error('Failed to fetch leaderboard data');
-                }
-
-                const data = await response.json();
-                renderLeaderboard(data);
-            } catch (error) {
-                console.error('Error fetching leaderboard:', error);
-            }
-        }
-
-        function renderLeaderboard(data) {
-            const leaderboardBody = document.getElementById('leaderboardBody');
-            leaderboardBody.innerHTML = '';
-
-            data.forEach((entry, index) => {
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td>${index + 1}</td>
-                    <td>${entry.name}</td>
-                    <td>${entry.score}</td>
-                    <td>${entry.time}s</td>
-                    <td>${new Date(entry.date).toLocaleString()}</td>
-                `;
-                leaderboardBody.appendChild(row);
-            });
-        }
-
-        function showLeaderboard() {
-            document.getElementById('quizSection').style.display = 'none';
-            document.getElementById('leaderboard').style.display = 'block';
-            fetchLeaderboard();
-        }
-
         function showLeaderboardFromHome() {
-            document.getElementById('nameInput').style.display = 'none';
             document.getElementById('quizSection').style.display = 'none';
             document.getElementById('leaderboard').style.display = 'block';
-            fetchLeaderboard();
-            localStorage.setItem('currentPage', 'leaderboard');
         }
 
         function hideLeaderboard() {
             document.getElementById('leaderboard').style.display = 'none';
+            document.getElementById('quizSection').style.display = 'block';
             document.getElementById('nameInput').style.display = 'block';
             document.getElementById('quizSection').style.display = 'none';
-            localStorage.setItem('currentPage', 'nameInput');
         }
-
-        function startQuiz() {
-            document.getElementById('nameInput').style.display = 'none';
-            document.getElementById('quizSection').style.display = 'block';
-            localStorage.setItem('currentPage', 'quizSection');
-            showQuestion(1);
-        }
-
-        function showQuestion(questionNumber) {
-            const questions = document.querySelectorAll('.question');
-            questions.forEach((question, index) => {
-                question.style.display = index + 1 === questionNumber ? 'block' : 'none';
-            });
-            localStorage.setItem('currentQuestion', questionNumber);
-        }
-
-        function checkAnswer(questionNumber, correctAnswer) {
-            const answerInput = document.getElementById(`answer${questionNumber}`);
-            const userAnswer = answerInput.value.trim().toLowerCase();
-            const correctAnswerLower = correctAnswer.toLowerCase();
-
-            if (userAnswer === correctAnswerLower) {
-                if (questionNumber < document.querySelectorAll('.question').length) {
-                    showQuestion(questionNumber + 1);
-                } else {
-                    document.getElementById('result').style.display = 'block';
-                    localStorage.setItem('currentQuestion', 'result');
-                }
-            } else {
-                let feedback = '';
-                let matchedChars = 0;
-
-                if (!correctAnswerLower.includes(' ')) {
-                    for (let i = 0; i < userAnswer.length && i < correctAnswerLower.length; i++) {
-                        if (userAnswer[i] === correctAnswerLower[i]) {
-                            matchedChars++;
-                        } else {
-                            break;
-                        }
-                    }
-
-                    if (matchedChars > 0) {
-                        feedback = `Matched ${matchedChars} character${matchedChars > 1 ? 's' : ''}. `;
-                        feedback += `${correctAnswerLower.length - matchedChars} character${correctAnswerLower.length - matchedChars > 1 ? 's' : ''} remaining.`;
-                    } else {
-                        feedback = 'No matching characters. Try again!';
-                    }
-
-                    if (userAnswer.length !== correctAnswerLower.length) {
-                        feedback += `\nHint: The answer has ${correctAnswerLower.length} characters.`;
-                    }
-                } else {
-                    const correctWords = correctAnswerLower.split(' ');
-                    const userWords = userAnswer.split(' ');
-                    let matchedWords = 0;
-
-                    userWords.forEach(word => {
-                        if (correctWords.includes(word)) {
-                            matchedWords++;
-                        }
-                    });
-
-                    if (matchedWords > 0) {
-                        feedback = `You matched ${matchedWords} word${matchedWords > 1 ? 's' : ''} correctly. `;
-                        feedback += `${correctWords.length - matchedWords} word${correctWords.length - matchedWords > 1 ? 's' : ''} remaining.`;
-                    } else {
-                        feedback = 'No matches found. Try again!';
-                    }
-
-                    if (userWords.length !== correctWords.length) {
-                        feedback += `\nHint: The answer has ${correctWords.length} words.`;
-                    }
-                }
-
-                const feedbackDiv = document.createElement('div');
-                feedbackDiv.style.color = matchedChars > 0 ? '#ff9800' : '#f44336';
-                feedbackDiv.style.marginTop = '10px';
-                feedbackDiv.style.padding = '10px';
-                feedbackDiv.style.borderRadius = '5px';
-                feedbackDiv.style.backgroundColor = '#fff3e0';
-                feedbackDiv.textContent = feedback;
-
-                const existingFeedback = document.querySelector(`#question${questionNumber} .feedback`);
-                if (existingFeedback) {
-                    existingFeedback.remove();
-                }
-
-                feedbackDiv.className = 'feedback';
-                answerInput.parentNode.appendChild(feedbackDiv);
-
-                setTimeout(() => {
-                    feedbackDiv.remove();
-                }, 3000);
-            }
-        }
-
-        function restorePage() {
-            const currentPage = localStorage.getItem('currentPage');
-            const currentQuestion = localStorage.getItem('currentQuestion');
-
-            if (currentPage === 'leaderboard') {
-                showLeaderboardFromHome();
-            } else if (currentPage === 'quizSection') {
-                document.getElementById('nameInput').style.display = 'none';
-                document.getElementById('quizSection').style.display = 'block';
-                if (currentQuestion === 'result') {
-                    document.getElementById('result').style.display = 'block';
-                } else if (currentQuestion) {
-                    showQuestion(parseInt(currentQuestion, 10));
-                }
-            } else {
-                hideLeaderboard();
-            }
-        }
-
-        window.onload = restorePage;
     </script>
 </body>
-</html>
