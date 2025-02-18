@@ -129,6 +129,10 @@ function clearQuizData() {
 // Function to end quiz
 async function endQuiz() {
     clearInterval(timerInterval);
+    const timerDiv = document.getElementById('timer');
+    if (timerDiv) {
+        timerDiv.remove();
+    }
     const endTime = Date.now();
     const completionTime = Math.floor((endTime - startTime) / 1000);
 
