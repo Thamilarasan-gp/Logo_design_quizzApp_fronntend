@@ -1,9 +1,9 @@
 function checkAnswer(questionNumber, correctAnswer) {
-    const userAnswer = document.getElementById(answer${questionNumber}).value.trim();
+    const userAnswer = document.getElementById(`answer${questionNumber}`).value.trim();
     
     if (userAnswer.toLowerCase() === correctAnswer.toLowerCase()) {
         correctAnswers++;
-        document.getElementById(question${questionNumber}).style.display = 'none';
+        document.getElementById(`question${questionNumber}`).style.display = 'none';
         
         if (questionNumber === 5) {
             const endTime = Date.now();
@@ -13,7 +13,7 @@ function checkAnswer(questionNumber, correctAnswer) {
             saveResult(completionTime);
         } else {
             currentQuestion = questionNumber + 1;
-            document.getElementById(question${currentQuestion}).style.display = 'block';
+            document.getElementById(`question${currentQuestion}`).style.display = 'block';
             saveQuizState();
         }
         return;
@@ -35,15 +35,15 @@ function checkAnswer(questionNumber, correctAnswer) {
         }
 
         if (matchedChars > 0) {
-            feedback = Matched ${matchedChars} character${matchedChars > 1 ? 's' : ''}. ;
-            feedback += ${correctAnswer.length - matchedChars} character${correctAnswer.length - matchedChars > 1 ? 's' : ''} remaining.;
+            feedback = `Matched ${matchedChars} character${matchedChars > 1 ? 's' : ''}. `;
+            feedback += `${correctAnswer.length - matchedChars} character${correctAnswer.length - matchedChars > 1 ? 's' : ''} remaining.`;
         } else {
             feedback = 'No matching characters. Try again!';
         }
 
         // Add length hint if lengths don't match
         if (userAnswer.length !== correctAnswer.length) {
-            feedback += \nHint: The answer has ${correctAnswer.length} characters.;
+            feedback += `\nHint: The answer has ${correctAnswer.length} characters.`;
         }
     } else {
         // For multi-word answers, use the existing word matching logic
@@ -58,14 +58,14 @@ function checkAnswer(questionNumber, correctAnswer) {
         });
 
         if (matchedWords > 0) {
-            feedback = You matched ${matchedWords} word${matchedWords > 1 ? 's' : ''} correctly. ;
-            feedback += ${correctWords.length - matchedWords} word${correctWords.length - matchedWords > 1 ? 's' : ''} remaining.;
+            feedback = `You matched ${matchedWords} word${matchedWords > 1 ? 's' : ''} correctly. `;
+            feedback += `${correctWords.length - matchedWords} word${correctWords.length - matchedWords > 1 ? 's' : ''} remaining.`;
         } else {
             feedback = 'No matches found. Try again!';
         }
 
         if (userWords.length !== correctWords.length) {
-            feedback += \nHint: The answer has ${correctWords.length} words.;
+            feedback += `\nHint: The answer has ${correctWords.length} words.`;
         }
     }
 
@@ -79,14 +79,14 @@ function checkAnswer(questionNumber, correctAnswer) {
     feedbackDiv.textContent = feedback;
 
     // Remove any existing feedback
-    const existingFeedback = document.querySelector(#question${questionNumber} .feedback);
+    const existingFeedback = document.querySelector(`#question${questionNumber} .feedback`);
     if (existingFeedback) {
         existingFeedback.remove();
     }
 
     // Add new feedback
     feedbackDiv.className = 'feedback';
-    document.getElementById(answer${questionNumber}).parentNode.appendChild(feedbackDiv);
+    document.getElementById(`answer${questionNumber}`).parentNode.appendChild(feedbackDiv);
 
     // Clear the feedback after 3 seconds
     setTimeout(() => {
@@ -404,17 +404,22 @@ function renderLeaderboard(data) {
             const row = document.createElement('tr');
             row.className = `leaderboard-row ${index < 3 ? `rank-${index + 1}` : ''}`;
             
+            // Format date properly
+            const date = new Date(entry.submittedAt);
+            const formattedDate = date.toLocaleString('en-IN', {
+                day: '2-digit',
+                month: 'short',
+                hour: '2-digit',
+                minute: '2-digit',
+                hour12: true
+            });
+
             row.innerHTML = `
                 <td>${index + 1}</td>
                 <td>${entry.name || 'Anonymous'}</td>
                 <td>${entry.score}/5 ${index === 0 ? '👑' : ''}</td>
                 <td>${entry.completionTime}s</td>
-                <td>${new Date(entry.submittedAt).toLocaleString('en-IN', {
-                    day: '2-digit',
-                    month: 'short',
-                    hour: '2-digit',
-                    minute: '2-digit'
-                })}</td>
+                <td>${formattedDate}</td>
             `;
 
             fragment.appendChild(row);
