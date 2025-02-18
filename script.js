@@ -738,14 +738,27 @@ async function showLeaderboard(viewAll = false, fromHome = false) {
     // Hide appropriate sections
     if (fromHome) {
         nameInput.style.display = 'none';
+        quizSection.style.display = 'block'; // Need to show this to display leaderboard
     } else {
         if (quizSection) quizSection.style.display = 'none';
         if (resultDiv) resultDiv.style.display = 'none';
     }
 
-    // Show leaderboard
+    // Show leaderboard with fade-in effect
+    leaderboardEl.style.opacity = '0';
     leaderboardEl.style.display = 'block';
+    setTimeout(() => {
+        leaderboardEl.style.opacity = '1';
+    }, 10);
+
     const leaderboardBody = document.getElementById('leaderboardBody');
+    leaderboardBody.innerHTML = `
+        <tr>
+            <td colspan="5">
+                <div class="loading-spinner"></div>
+            </td>
+        </tr>
+    `;
 
     try {
         // Add viewAll parameter to the URL
@@ -797,6 +810,13 @@ async function showLeaderboard(viewAll = false, fromHome = false) {
             cursor: pointer;
             font-size: 14px;
         `;
+        
+        // Remove existing view all button if it exists
+        const existingViewAllBtn = leaderboardEl.querySelector('.view-all-button');
+        if (existingViewAllBtn) {
+            existingViewAllBtn.remove();
+        }
+        
         leaderboardEl.insertBefore(viewAllButton, leaderboardEl.querySelector('button:last-child'));
 
     } catch (error) {
