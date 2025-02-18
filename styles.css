@@ -615,6 +615,53 @@ button:hover {
     padding: 24px;
     max-width: 90%;
     width: 600px;
+    max-height: 80vh;
+    overflow-y: auto;
+}
+
+/* Style the scrollbar */
+#leaderboard::-webkit-scrollbar {
+    width: 8px;
+}
+
+#leaderboard::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+}
+
+#leaderboard::-webkit-scrollbar-thumb {
+    background: var(--primary-color);
+    border-radius: 4px;
+}
+
+#leaderboard::-webkit-scrollbar-thumb:hover {
+    background: #ff5252;
+}
+
+/* Keep the header visible while scrolling */
+#leaderboard h3 {
+    position: sticky;
+    top: 0;
+    background: var(--white);
+    padding: 12px 0;
+    margin: 0 0 12px 0;
+    z-index: 2;
+}
+
+/* Keep the table header visible while scrolling */
+#leaderboardTable thead {
+    position: sticky;
+    top: 50px;
+    background: #f8f9fa;
+    z-index: 2;
+}
+
+/* Ensure the close button stays at the bottom */
+#leaderboard button {
+    position: sticky;
+    bottom: 0;
+    margin-top: 16px;
+    width: 100%;
 }
 
 #leaderboard h3 {
