@@ -1,3 +1,22 @@
+// Constants
+const SERVER_URL = 'https://logo-design-quizzapp.onrender.com';
+const CACHE_KEY = 'leaderboardCache';
+const CACHE_DURATION = 3000; // 3 seconds cache
+
+// Get batch ID from URL
+const queryParams = new URLSearchParams(window.location.search);
+const batchId = queryParams.get('batchId');
+
+// Global variables
+let startTime;
+let playerName = '';
+let correctAnswers = 0;
+let currentQuestion = 1;
+let timerInterval;
+let cachedData = null;
+let isFetching = false;
+let prefetchTimer = null;
+
 let startTime;
 let playerName = '';
 let correctAnswers = 0;
@@ -441,10 +460,6 @@ function loadQuizState() {
     return false;
 }
 
-// Get batch ID from URL
-const queryParams = new URLSearchParams(window.location.search);
-const batchId = queryParams.get('batchId');
-
 // Add batch validation on page load
 document.addEventListener('DOMContentLoaded', () => {
     if (!batchId) {
@@ -461,14 +476,6 @@ const leaderboardEl = document.getElementById('leaderboard');
 const leaderboardBody = document.getElementById('leaderboardBody');
 const quizSection = document.getElementById('quizSection');
 const nameInput = document.getElementById('nameInput');
-
-// Constants and cache
-const SERVER_URL = 'https://logo-design-quizzapp.onrender.com';
-const CACHE_KEY = 'leaderboardCache';
-const CACHE_DURATION = 3000; // 3 seconds cache
-let cachedData = null;
-let isFetching = false;
-let prefetchTimer = null;
 
 // Preload and background sync
 function initializeLeaderboard() {
