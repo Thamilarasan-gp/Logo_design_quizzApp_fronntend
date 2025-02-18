@@ -404,11 +404,15 @@ function renderLeaderboard(data) {
             const row = document.createElement('tr');
             row.className = `leaderboard-row ${index < 3 ? `rank-${index + 1}` : ''}`;
             
-            // Format date properly
-            const date = new Date(entry.submittedAt);
-            const formattedDate = date.toLocaleString('en-IN', {
+            // Format date and time
+            const submittedDate = new Date(entry.submittedAt);
+            const formattedDate = submittedDate.toLocaleDateString('en-IN', {
                 day: '2-digit',
                 month: 'short',
+                year: 'numeric'
+            });
+            
+            const formattedTime = submittedDate.toLocaleTimeString('en-IN', {
                 hour: '2-digit',
                 minute: '2-digit',
                 hour12: true
@@ -419,7 +423,7 @@ function renderLeaderboard(data) {
                 <td>${entry.name || 'Anonymous'}</td>
                 <td>${entry.score}/5 ${index === 0 ? '👑' : ''}</td>
                 <td>${entry.completionTime}s</td>
-                <td>${formattedDate}</td>
+                <td>${formattedTime} ${formattedDate}</td>
             `;
 
             fragment.appendChild(row);
