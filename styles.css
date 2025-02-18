@@ -615,7 +615,7 @@ button:hover {
     padding: 24px;
     max-width: 90%;
     width: 600px;
-    max-height: 80vh;
+    max-height: 90vh;
     overflow-y: auto;
 }
 
