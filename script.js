@@ -66,6 +66,35 @@ function startTimer() {
     }, 1000);
 }
 
+// Function to clear all quiz data
+function clearQuizData() {
+    // Clear all input fields
+    document.querySelectorAll('input[type="text"]').forEach(input => {
+        input.value = '';
+    });
+
+    // Clear player name input
+    document.getElementById('playerName').value = '';
+
+    // Reset global variables
+    startTime = null;
+    playerName = '';
+    correctAnswers = 0;
+    currentQuestion = 1;
+
+    // Clear local storage
+    localStorage.removeItem('quizState');
+    
+    // Hide all questions and reset their display
+    document.querySelectorAll('.question').forEach(q => {
+        q.style.display = 'none';
+        const input = q.querySelector('input[type="text"]');
+        if (input) {
+            input.value = '';
+        }
+    });
+}
+
 // Function to end quiz
 async function endQuiz() {
     clearInterval(timerInterval);
@@ -150,8 +179,8 @@ async function endQuiz() {
             timerDiv.remove();
         }
         
-        // Clear quiz state
-        localStorage.removeItem('quizState');
+        // Clear all quiz data
+        clearQuizData();
     }
 }
 
@@ -615,6 +644,9 @@ async function showLeaderboard() {
                     </td>
                 </tr>`;
         }
+    } finally {
+        // Clear quiz data when showing leaderboard
+        clearQuizData();
     }
 }
 
