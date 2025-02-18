@@ -110,20 +110,55 @@ function checkAnswer(questionNumber, correctAnswer) {
 
 
 // Function to start quiz
-function startQuiz() {
+async function startQuiz() {
     playerName = document.getElementById('playerName').value.trim();
     if (!playerName) {
         alert('Please enter your name');
         return;
     }
-    startTime = Date.now();
-    currentQuestion = 1;
-    correctAnswers = 0;
-    document.getElementById('nameInput').style.display = 'none';
-    document.getElementById('quizSection').style.display = 'block';
-    document.querySelector('.corner-button').style.display = 'none';
-    document.getElementById(`question${currentQuestion}`).style.display = 'block';
-    saveQuizState();
+
+    // Check if name exists
+    try {
+        const response = await fetch(`${SERVER_URL}/api/save-result`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Origin': 'https://logo-design-quizz-app-fronntend-luse4lksm.vercel.app'
+            },
+            credentials: 'include',
+            body: JSON.stringify({
+                name: playerName,
+                score: 0,
+                completionTime: 0,
+                entryTime: Date.now()
+            })
+        });
+
+        const data = await response.json();
+        
+        if (response.status === 400 && data.error === 'Name already exists') {
+            alert('This name is already taken. Please choose a different name.');
+            return;
+        }
+
+        if (!response.ok) {
+            throw new Error(data.error || 'Failed to validate name');
+        }
+
+        // Start quiz if name is unique
+        startTime = Date.now();
+        currentQuestion = 1;
+        correctAnswers = 0;
+        document.getElementById('nameInput').style.display = 'none';
+        document.getElementById('quizSection').style.display = 'block';
+        document.querySelector('.corner-button').style.display = 'none';
+        document.getElementById(`question${currentQuestion}`).style.display = 'block';
+        saveQuizState();
+
+    } catch (error) {
+        console.error('Error validating name:', error);
+        alert('Error starting quiz: ' + error.message);
+    }
 }
 
 // Function to load quiz state
