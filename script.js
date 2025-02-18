@@ -31,6 +31,7 @@ function createTimer() {
     timerDiv.id = 'timer';
     timerDiv.className = 'timer';
     timerDiv.style.cssText = `
+        display: none; /* Hide the timer */
         position: fixed;
         top: 20px;
         left: 50%;
@@ -321,7 +322,7 @@ async function retrySaveResult(completionTime) {
             <p style="color: #ff4444;">Failed to save results: ${error.message}</p>
             <button onclick="retrySaveResult(${completionTime})" class="retry-button" style="
                 padding: 10px 20px;
-                background: var(--primary-color);
+                background: var (--primary-color);
                 color: white;
                 border: none;
                 border-radius: 5px;
