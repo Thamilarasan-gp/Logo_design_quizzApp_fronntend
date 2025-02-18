@@ -184,84 +184,118 @@ async function retrySaveResult(completionTime) {
 function checkAnswer(questionNumber, correctAnswer) {
     const userAnswer = document.getElementById(`answer${questionNumber}`).value.trim();
     
-    // Create array of acceptable answers
-    const acceptableAnswers = ['IT', 'INFORMATION TECHNOLOGY'];
+    // Create array of acceptable answers for question 1
+    const acceptableAnswers = questionNumber === 1 ? ['IT', 'INFORMATION TECHNOLOGY'] : [correctAnswer];
     
-    // For question 1, check both possible answers
-    if (questionNumber === 1) {
-        if (acceptableAnswers.includes(userAnswer.toUpperCase())) {
-            correctAnswers++;
-            document.getElementById(`question${questionNumber}`).style.display = 'none';
+    // Check if answer is correct (any of the acceptable answers)
+    if (acceptableAnswers.some(answer => userAnswer.toUpperCase() === answer.toUpperCase())) {
+        correctAnswers++;
+        document.getElementById(`question${questionNumber}`).style.display = 'none';
+        
+        if (questionNumber === 5) {
+            endQuiz();
+        } else {
             currentQuestion = questionNumber + 1;
             document.getElementById(`question${currentQuestion}`).style.display = 'block';
             saveQuizState();
-            return;
         }
-    } else {
-        // For other questions, use the original logic
-        if (userAnswer.toLowerCase() === correctAnswer.toLowerCase()) {
-            correctAnswers++;
-            document.getElementById(`question${questionNumber}`).style.display = 'none';
-            
-            if (questionNumber === 5) {
-                endQuiz();
-            } else {
-                currentQuestion = questionNumber + 1;
-                document.getElementById(`question${currentQuestion}`).style.display = 'block';
-                saveQuizState();
-            }
-            return;
-        }
+        return;
     }
 
     // For partial matches
     let feedback = '';
     let matchedChars = 0;
     
-    // If answer is one word, do character matching
-    if (!correctAnswer.toLowerCase().includes(' ')) {
-        for (let i = 0; i < userAnswer.length && i < correctAnswer.length; i++) {
-            if (userAnswer[i] === correctAnswer[i]) {
-                matchedChars++;
+    // For question 1, check both possible answers for partial matches
+    if (questionNumber === 1) {
+        const bestMatch = acceptableAnswers.map(answer => {
+            if (!answer.includes(' ')) {
+                // For single word answers (IT)
+                let chars = 0;
+                for (let i = 0; i < userAnswer.length && i < answer.length; i++) {
+                    if (userAnswer[i].toUpperCase() === answer[i]) {
+                        chars++;
+                    } else {
+                        break;
+                    }
+                }
+                return { chars, answer };
             } else {
-                break;
+                // For multi-word answers (Information Technology)
+                const userWords = userAnswer.toUpperCase().split(' ');
+                const correctWords = answer.toUpperCase().split(' ');
+                let matchedWords = 0;
+                userWords.forEach(word => {
+                    if (correctWords.includes(word)) {
+                        matchedWords++;
+                    }
+                });
+                return { words: matchedWords, answer };
             }
-        }
+        }).reduce((best, current) => {
+            if (current.chars > (best.chars || 0)) return current;
+            if (current.words > (best.words || 0)) return current;
+            return best;
+        }, {});
 
-        if (matchedChars > 0) {
-            feedback = `Matched ${matchedChars} character${matchedChars > 1 ? 's' : ''}. `;
-            feedback += `${correctAnswer.length - matchedChars} character${correctAnswer.length - matchedChars > 1 ? 's' : ''} remaining.`;
-        } else {
-            feedback = 'No matching characters. Try again!';
-        }
-
-        if (userAnswer.length !== correctAnswer.length) {
-            feedback += `\nHint: The answer has ${correctAnswer.length} characters.`;
-        }
-    } else {
-        const correctWords = correctAnswer.split(' ');
-        const userWords = userAnswer.split(' ');
-        let matchedWords = 0;
-
-        userWords.forEach(word => {
-            if (correctWords.includes(word)) {
-                matchedWords++;
-            }
-        });
-
-        if (matchedWords > 0) {
-            feedback = `You matched ${matchedWords} word${matchedWords > 1 ? 's' : ''} correctly. `;
-            feedback += `${correctWords.length - matchedWords} word${correctWords.length - matchedWords > 1 ? 's' : ''} remaining.`;
+        if (bestMatch.chars) {
+            feedback = `Matched ${bestMatch.chars} character${bestMatch.chars > 1 ? 's' : ''} with "${bestMatch.answer}". `;
+            feedback += `${bestMatch.answer.length - bestMatch.chars} character${bestMatch.answer.length - bestMatch.chars > 1 ? 's' : ''} remaining.`;
+        } else if (bestMatch.words) {
+            const totalWords = bestMatch.answer.split(' ').length;
+            feedback = `Matched ${bestMatch.words} word${bestMatch.words > 1 ? 's' : ''} with "${bestMatch.answer}". `;
+            feedback += `${totalWords - bestMatch.words} word${totalWords - bestMatch.words > 1 ? 's' : ''} remaining.`;
         } else {
             feedback = 'No matches found. Try again!';
         }
+    } else {
+        // Original logic for other questions
+        if (!correctAnswer.toLowerCase().includes(' ')) {
+            // Single word matching
+            for (let i = 0; i < userAnswer.length && i < correctAnswer.length; i++) {
+                if (userAnswer[i].toLowerCase() === correctAnswer[i].toLowerCase()) {
+                    matchedChars++;
+                } else {
+                    break;
+                }
+            }
 
-        if (userWords.length !== correctWords.length) {
-            feedback += `\nHint: The answer has ${correctWords.length} words.`;
+            if (matchedChars > 0) {
+                feedback = `Matched ${matchedChars} character${matchedChars > 1 ? 's' : ''}. `;
+                feedback += `${correctAnswer.length - matchedChars} character${correctAnswer.length - matchedChars > 1 ? 's' : ''} remaining.`;
+            } else {
+                feedback = 'No matching characters. Try again!';
+            }
+
+            if (userAnswer.length !== correctAnswer.length) {
+                feedback += `\nHint: The answer has ${correctAnswer.length} characters.`;
+            }
+        } else {
+            // Multi-word matching
+            const correctWords = correctAnswer.toLowerCase().split(' ');
+            const userWords = userAnswer.toLowerCase().split(' ');
+            let matchedWords = 0;
+
+            userWords.forEach(word => {
+                if (correctWords.includes(word)) {
+                    matchedWords++;
+                }
+            });
+
+            if (matchedWords > 0) {
+                feedback = `You matched ${matchedWords} word${matchedWords > 1 ? 's' : ''} correctly. `;
+                feedback += `${correctWords.length - matchedWords} word${correctWords.length - matchedWords > 1 ? 's' : ''} remaining.`;
+            } else {
+                feedback = 'No matches found. Try again!';
+            }
+
+            if (userWords.length !== correctWords.length) {
+                feedback += `\nHint: The answer has ${correctWords.length} words.`;
+            }
         }
     }
 
-    // Show feedback in a more visible way
+    // Show feedback
     const feedbackDiv = document.createElement('div');
     feedbackDiv.style.color = matchedChars > 0 ? '#ff9800' : '#f44336';
     feedbackDiv.style.marginTop = '10px';
@@ -270,7 +304,7 @@ function checkAnswer(questionNumber, correctAnswer) {
     feedbackDiv.style.backgroundColor = '#fff3e0';
     feedbackDiv.textContent = feedback;
 
-    // Remove any existing feedback
+    // Remove existing feedback
     const existingFeedback = document.querySelector(`#question${questionNumber} .feedback`);
     if (existingFeedback) {
         existingFeedback.remove();
@@ -280,7 +314,7 @@ function checkAnswer(questionNumber, correctAnswer) {
     feedbackDiv.className = 'feedback';
     document.getElementById(`answer${questionNumber}`).parentNode.appendChild(feedbackDiv);
 
-    // Clear the feedback after 3 seconds
+    // Clear feedback after 3 seconds
     setTimeout(() => {
         feedbackDiv.remove();
     }, 3000);
