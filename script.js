@@ -728,82 +728,82 @@ async function prefetchData() {
     }
 }
 
-// Enhanced show leaderboard function
-async function showLeaderboard() {
+// Function to show leaderboard with view all option
+async function showLeaderboard(viewAll = false) {
     const leaderboardEl = document.getElementById('leaderboard');
-    const leaderboardBody = document.getElementById('leaderboardBody');
+    const resultDiv = document.getElementById('result');
+    const quizSection = document.getElementById('quizSection');
 
-    // Show immediately with loading state if no cache
+    // Hide quiz section and result
+    if (quizSection) quizSection.style.display = 'none';
+    if (resultDiv) resultDiv.style.display = 'none';
+
+    // Show leaderboard
     leaderboardEl.style.display = 'block';
-    
-    // Show cached data first if available
-    if (cachedData) {
-        renderLeaderboard(cachedData);
-    } else {
-        leaderboardBody.innerHTML = `
-            <tr>
-                <td colspan="5">
-                    <div class="loading-spinner"></div>
-                </td>
-            </tr>`;
-    }
-
-    // Fetch fresh data
-    try {
-        const data = await fetchLeaderboard();
-        if (data) {
-            renderLeaderboard(data);
-        }
-    } catch (error) {
-        if (!cachedData) {
-            leaderboardBody.innerHTML = `
-                <tr>
-                    <td colspan="5" class="error-message">
-                        Unable to load leaderboard. Please try again.
-                    </td>
-                </tr>`;
-        }
-    } finally {
-        // Clear quiz data when showing leaderboard
-        clearQuizData();
-    }
-}
-
-// Optimized render function
-function renderLeaderboard(data) {
-    if (!data || !data.length) return;
-
     const leaderboardBody = document.getElementById('leaderboardBody');
-    const fragment = document.createDocumentFragment();
 
-    // Sort once and cache
-    const sortedData = data.sort((a, b) => b.score - a.score || a.completionTime - b.completionTime);
-
-    // Use requestAnimationFrame for smooth rendering
-    requestAnimationFrame(() => {
-        sortedData.forEach((entry, index) => {
-            const row = document.createElement('tr');
-            row.className = `leaderboard-row ${index < 3 ? `rank-${index + 1}` : ''}`;
-            
-            row.innerHTML = `
-                <td>${index + 1}</td>
-                <td>${entry.name || 'Anonymous'}</td>
-                <td>${entry.score}/5 ${index === 0 ? '👑' : ''}</td>
-                <td>${entry.completionTime}s</td>
-                <td>${new Date(entry.submittedAt).toLocaleString('en-IN', {
-                    day: '2-digit',
-                    month: 'short',
-                    hour: '2-digit',
-                    minute: '2-digit'
-                })}</td>
-            `;
-
-            fragment.appendChild(row);
+    try {
+        // Add viewAll parameter to the URL
+        const url = `${SERVER_URL}/api/leaderboard${viewAll ? '?all=true' : ''}`;
+        const response = await fetch(url, {
+            headers: {
+                'Content-Type': 'application/json',
+                'Origin': 'https://logo-design-quizz-app-fronntend.vercel.app'
+            },
+            credentials: 'include'
         });
 
+        if (!response.ok) {
+            throw new Error('Failed to fetch leaderboard');
+        }
+
+        const data = await response.json();
+        
+        // Clear existing content
         leaderboardBody.innerHTML = '';
-        leaderboardBody.appendChild(fragment);
-    });
+
+        // Add rows to leaderboard
+        data.forEach((entry, index) => {
+            const row = document.createElement('tr');
+            row.className = 'leaderboard-row';
+            row.innerHTML = `
+                <td>${index + 1}</td>
+                <td>${entry.name}</td>
+                <td>${entry.score}/5</td>
+                <td>${entry.completionTime}s</td>
+                <td>${new Date(entry.submittedAt).toLocaleTimeString()}</td>
+            `;
+            leaderboardBody.appendChild(row);
+        });
+
+        // Add view all/show less button
+        const viewAllButton = document.createElement('button');
+        viewAllButton.className = 'view-all-button';
+        viewAllButton.innerHTML = viewAll ? 'Show Less' : 'View All';
+        viewAllButton.onclick = () => showLeaderboard(!viewAll);
+        viewAllButton.style.cssText = `
+            margin: 10px auto;
+            display: block;
+            padding: 8px 16px;
+            background: var(--secondary-color);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+        `;
+        leaderboardEl.insertBefore(viewAllButton, leaderboardEl.querySelector('button:last-child'));
+
+    } catch (error) {
+        console.error('Error fetching leaderboard:', error);
+        leaderboardBody.innerHTML = `
+            <tr>
+                <td colspan="5" style="text-align: center; color: red;">
+                    Failed to load leaderboard. Please try again.
+                </td>
+            </tr>
+        `;
+    }
 }
 
 // Add this CSS for better visual feedback
