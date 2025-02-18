@@ -79,9 +79,16 @@ async function endQuiz() {
     // Show result with current score
     const resultDiv = document.getElementById('result');
     resultDiv.innerHTML = `
-        <h3>Time's up!</h3>
-        <p>Your score: ${correctAnswers}/5</p>
-        <p>Time taken: ${completionTime} seconds</p>
+        <div class="final-score">
+            <h3>Time's up!</h3>
+            <p class="score">Your score: ${correctAnswers}/5</p>
+            <p class="time">Time taken: ${completionTime} seconds</p>
+            <div id="leaderboardBtnContainer" style="opacity: 0; transition: opacity 1s;">
+                <button onclick="showLeaderboard()" class="view-leaderboard-btn">
+                    🏆 View Leaderboard
+                </button>
+            </div>
+        </div>
     `;
     resultDiv.style.display = 'block';
     
@@ -106,11 +113,13 @@ async function endQuiz() {
             throw new Error('Failed to save results');
         }
 
-        // Show leaderboard after saving
-        await showLeaderboard();
-        
-        // Show the leaderboard button again
-        document.querySelector('.corner-button').style.display = 'block';
+        // Wait 30 seconds then show the leaderboard button
+        setTimeout(() => {
+            const btnContainer = document.getElementById('leaderboardBtnContainer');
+            if (btnContainer) {
+                btnContainer.style.opacity = '1';
+            }
+        }, 30000); // 30 seconds
         
     } catch (error) {
         console.error('Error saving results:', error);
@@ -613,3 +622,43 @@ function showLeaderboardFromHome() {
     // Fetch and display data
     fetchLeaderboard();
 }
+
+// Add these styles
+const styles = document.createElement('style');
+styles.textContent = `
+    .final-score {
+        text-align: center;
+        padding: 20px;
+    }
+
+    .score {
+        font-size: 24px;
+        color: #FF6B6B;
+        font-weight: bold;
+        margin: 15px 0;
+    }
+
+    .time {
+        font-size: 18px;
+        color: #666;
+        margin: 10px 0;
+    }
+
+    .view-leaderboard-btn {
+        background: linear-gradient(135deg, #FF6B6B 0%, #FFD93D 100%);
+        color: white;
+        padding: 12px 24px;
+        border: none;
+        border-radius: 50px;
+        font-size: 16px;
+        font-weight: bold;
+        cursor: pointer;
+        transition: transform 0.3s ease;
+        margin-top: 20px;
+    }
+
+    .view-leaderboard-btn:hover {
+        transform: translateY(-2px);
+    }
+`;
+document.head.appendChild(styles);
