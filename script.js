@@ -125,20 +125,16 @@ async function endQuiz() {
         q.style.display = 'none';
     });
     
-    // Show result with current score
+    // Show result
     const resultDiv = document.getElementById('result');
     resultDiv.innerHTML = `
         <h3>Time's up!</h3>
         <p>Your score: ${correctAnswers}/5</p>
         <p>Time taken: ${completionTime} seconds</p>
-        <p id="countdown" style="margin-top: 20px; color: #666;">
-            Leaderboard will appear in 30 seconds...
-        </p>
     `;
     resultDiv.style.display = 'block';
     
     try {
-        // Save result to MongoDB
         const response = await fetch(`${SERVER_URL}/api/save-result`, {
             method: 'POST',
             headers: {
@@ -150,7 +146,8 @@ async function endQuiz() {
                 name: playerName,
                 score: correctAnswers,
                 completionTime: completionTime,
-                entryTime: startTime
+                entryTime: startTime,
+                batchId: batchId
             })
         });
 
@@ -158,38 +155,17 @@ async function endQuiz() {
             throw new Error('Failed to save results');
         }
 
-        // Wait 30 seconds before showing leaderboard
-        let timeLeft = 30;
-        const countdownEl = document.getElementById('countdown');
-        
-        const countdownInterval = setInterval(() => {
-            timeLeft--;
-            if (countdownEl) {
-                countdownEl.textContent = `Leaderboard will appear in ${timeLeft} seconds...`;
-            }
-            
-            if (timeLeft <= 0) {
-                clearInterval(countdownInterval);
-                showLeaderboard();
-                document.querySelector('.corner-button').style.display = 'block';
-            }
-        }, 1000);
-        
+        // Show leaderboard after 30 seconds
+        setTimeout(() => {
+            showLeaderboard();
+        }, 30000);
+
     } catch (error) {
         console.error('Error saving results:', error);
         resultDiv.innerHTML += `
             <p style="color: #ff4444;">Failed to save results. Please try again.</p>
             <button onclick="retrySaveResult(${completionTime})">Retry Save</button>
         `;
-    } finally {
-        // Remove timer display
-        const timerDiv = document.getElementById('timer');
-        if (timerDiv) {
-            timerDiv.remove();
-        }
-        
-        // Clear quiz state
-        localStorage.removeItem('quizState');
     }
 }
 
@@ -402,7 +378,7 @@ async function startQuiz() {
     }
 
     try {
-        const response = await fetch(`${SERVER_URL}/api/check-name`, {
+        const response = await fetch(`${SERVER_URL}/api/check-name?batchId=${batchId}`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -414,16 +390,12 @@ async function startQuiz() {
 
         const data = await response.json();
         
-        if (response.status === 400 && data.error === 'Name already exists') {
-            alert('This name is already taken. Please choose a different name.');
+        if (!response.ok) {
+            alert(data.message);
             return;
         }
 
-        if (!response.ok) {
-            throw new Error(data.error || 'Failed to validate name');
-        }
-
-        // Start quiz if name is unique and format is valid
+        // Start quiz if everything is valid
         startTime = Date.now();
         currentQuestion = 1;
         correctAnswers = 0;
@@ -432,7 +404,6 @@ async function startQuiz() {
         document.querySelector('.corner-button').style.display = 'none';
         document.getElementById(`question${currentQuestion}`).style.display = 'block';
         
-        // Create and start timer
         createTimer();
         startTimer();
         
@@ -470,8 +441,18 @@ function loadQuizState() {
     return false;
 }
 
-// Load state on page load
+// Get batch ID from URL
+const queryParams = new URLSearchParams(window.location.search);
+const batchId = queryParams.get('batchId');
+
+// Add batch validation on page load
 document.addEventListener('DOMContentLoaded', () => {
+    if (!batchId) {
+        showError('Please use the correct batch link to access the quiz.');
+        document.getElementById('playerName').disabled = true;
+        document.querySelector('.start-button').disabled = true;
+        return;
+    }
     loadQuizState();
 });
 
@@ -724,4 +705,46 @@ function showLeaderboardFromHome() {
 
     // Fetch and display data
     fetchLeaderboard();
+}
+
+// Update fetchLeaderboard to include batchId
+async function fetchLeaderboard() {
+    try {
+        const response = await fetch(`${SERVER_URL}/api/leaderboard?batchId=${batchId}`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Origin': 'https://logo-design-quizz-app-fronntend-luse4lksm.vercel.app'
+            },
+            credentials: 'include'
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to fetch leaderboard data');
+        }
+
+        const data = await response.json();
+        renderLeaderboard(data);
+        return data;
+    } catch (error) {
+        console.error('Error fetching leaderboard:', error);
+        showError('Failed to load leaderboard. Please try again.');
+    }
+}
+
+// Add error display function
+function showError(message) {
+    const errorDiv = document.createElement('div');
+    errorDiv.className = 'error-message';
+    errorDiv.style.cssText = `
+        background: #ff6b6b;
+        color: white;
+        padding: 15px;
+        border-radius: 8px;
+        margin: 20px 0;
+        text-align: center;
+        font-weight: 500;
+    `;
+    errorDiv.textContent = message;
+    document.querySelector('.welcome-container').prepend(errorDiv);
 }
