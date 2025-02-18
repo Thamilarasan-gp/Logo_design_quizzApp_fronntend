@@ -144,39 +144,57 @@ async function endQuiz() {
     }
 }
 
-// Add retry function for failed saves
+// Function to retry saving results
 async function retrySaveResult(completionTime) {
     try {
+        if (!playerName || !batchId) {
+            throw new Error('Missing required information');
+        }
+
+        const saveData = {
+            name: playerName,
+            score: correctAnswers,
+            completionTime: completionTime,
+            entryTime: startTime,
+            batchId: batchId
+        };
+
+        console.log('Sending save request:', saveData);
+
         const response = await fetch(`${SERVER_URL}/api/save-result`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'Origin': 'https://logo-design-quizz-app-fronntend-luse4lksm.vercel.app'
+                'Origin': 'https://logo-design-quizz-app-fronntend.vercel.app'
             },
             credentials: 'include',
-            body: JSON.stringify({
-                name: playerName,
-                score: correctAnswers,
-                completionTime: completionTime,
-                entryTime: startTime
-            })
+            body: JSON.stringify(saveData)
         });
 
+        const data = await response.json();
+        console.log('Save response:', data);
+
         if (!response.ok) {
-            throw new Error('Failed to save results');
+            throw new Error(data.message || 'Failed to save results');
         }
 
-        // Show success message and leaderboard
-        document.getElementById('result').innerHTML = `
-            <h3>Results saved successfully!</h3>
-            <p>Your score: ${correctAnswers}/5</p>
-            <p>Time taken: ${completionTime} seconds</p>
+        // Update the result display
+        const resultDiv = document.getElementById('result');
+        resultDiv.innerHTML = `
+            <h2>Results saved successfully!</h2>
+            <p>Score: ${correctAnswers}/5</p>
+            <p>Time: ${formatTime(completionTime)} seconds</p>
         `;
-        await showLeaderboard();
-        
+
+        // Show leaderboard after successful save
+        showLeaderboard();
     } catch (error) {
         console.error('Error in retry save:', error);
-        alert('Failed to save results. Please try again.');
+        const resultDiv = document.getElementById('result');
+        resultDiv.innerHTML += `
+            <p style="color: #ff4444;">Failed to save results: ${error.message}</p>
+            <button onclick="retrySaveResult(${completionTime})" class="retry-button">Retry Save</button>
+        `;
     }
 }
 
