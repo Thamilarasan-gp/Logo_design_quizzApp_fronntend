@@ -57,8 +57,16 @@ function startTimer() {
     const savedState = localStorage.getItem('quizState');
     if (savedState) {
         const state = JSON.parse(savedState);
-        const elapsed = Math.floor((Date.now() - state.lastUpdated) / 1000);
-        timeLeft = Math.max(0, QUIZ_TIME_LIMIT - elapsed);
+        // Calculate elapsed time since quiz started
+        const elapsedTime = Math.floor((Date.now() - state.startTime) / 1000);
+        // Calculate remaining time
+        timeLeft = Math.max(0, QUIZ_TIME_LIMIT - elapsedTime);
+        
+        console.log('Restoring timer:', {
+            startTime: new Date(state.startTime),
+            elapsedTime,
+            timeLeft
+        });
     }
 
     function updateTimer() {
@@ -77,7 +85,9 @@ function startTimer() {
         }
         
         timeLeft--;
-        saveQuizState(); // Save state on each tick
+        
+        // Save current state
+        saveQuizState();
     }
 
     // Initial update
@@ -598,7 +608,41 @@ function loadQuizState() {
 
 // Load state on page load
 document.addEventListener('DOMContentLoaded', () => {
-    loadQuizState();
+    const savedState = localStorage.getItem('quizState');
+    if (savedState) {
+        const state = JSON.parse(savedState);
+        const elapsedTime = Math.floor((Date.now() - state.startTime) / 1000);
+        
+        // If quiz is still in progress and time hasn't expired
+        if (elapsedTime < QUIZ_TIME_LIMIT && state.isQuizStarted) {
+            console.log('Restoring quiz state:', {
+                elapsedTime,
+                timeRemaining: QUIZ_TIME_LIMIT - elapsedTime
+            });
+            
+            // Restore quiz state
+            playerName = state.playerName;
+            startTime = state.startTime; // Keep original start time
+            correctAnswers = state.correctAnswers;
+            currentQuestion = state.currentQuestion;
+            
+            // Hide name input and show quiz
+            document.getElementById('nameInput').style.display = 'none';
+            document.getElementById('quizSection').style.display = 'block';
+            document.querySelector('.corner-button').style.display = 'none';
+            
+            // Show current question
+            document.querySelectorAll('.question').forEach(q => q.style.display = 'none');
+            document.getElementById(`question${currentQuestion}`).style.display = 'block';
+            
+            // Restart timer with remaining time
+            startTimer();
+        } else {
+            // If time has expired, clean up
+            localStorage.removeItem('quizState');
+            clearQuizData();
+        }
+    }
 });
 
 // Cache DOM elements
@@ -854,37 +898,3 @@ function showLeaderboardFromHome() {
     // Fetch and display data
     fetchLeaderboard();
 }
-
-// Add this to handle page reload
-window.addEventListener('load', () => {
-    const savedState = localStorage.getItem('quizState');
-    if (savedState) {
-        const state = JSON.parse(savedState);
-        const elapsed = Math.floor((Date.now() - state.lastUpdated) / 1000);
-        
-        // If quiz is still in progress and time hasn't expired
-        if (elapsed < QUIZ_TIME_LIMIT && state.isQuizStarted) {
-            // Restore quiz state
-            playerName = state.playerName;
-            startTime = state.startTime;
-            correctAnswers = state.correctAnswers;
-            currentQuestion = state.currentQuestion;
-            
-            // Hide name input and show quiz
-            document.getElementById('nameInput').style.display = 'none';
-            document.getElementById('quizSection').style.display = 'block';
-            document.querySelector('.corner-button').style.display = 'none';
-            
-            // Show current question
-            document.querySelectorAll('.question').forEach(q => q.style.display = 'none');
-            document.getElementById(`question${currentQuestion}`).style.display = 'block';
-            
-            // Restart timer with remaining time
-            startTimer();
-        } else {
-            // If time has expired, clean up
-            localStorage.removeItem('quizState');
-            clearQuizData();
-        }
-    }
-});
