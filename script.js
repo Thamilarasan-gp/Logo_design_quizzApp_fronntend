@@ -597,10 +597,8 @@ async function showLeaderboard() {
 
     try {
         const response = await fetch(`${SERVER_URL}/api/leaderboard`, {
-            method: 'GET',
             headers: {
-                'Content-Type': 'application/json',
-                'Origin': 'https://logo-design-quizz-app-fronntend.vercel.app'
+                'Content-Type': 'application/json'
             },
             credentials: 'include'
         });
@@ -610,7 +608,6 @@ async function showLeaderboard() {
         }
 
         const data = await response.json();
-        console.log('Leaderboard data:', data); // Debug log
         
         // Clear existing content
         leaderboardBody.innerHTML = '';
@@ -618,7 +615,6 @@ async function showLeaderboard() {
         // Add rows to leaderboard
         data.forEach((entry, index) => {
             const row = document.createElement('tr');
-            row.className = 'leaderboard-row';
             row.innerHTML = `
                 <td>${index + 1}</td>
                 <td>${entry.name}</td>
@@ -629,31 +625,23 @@ async function showLeaderboard() {
             leaderboardBody.appendChild(row);
         });
 
-        // Add home button if it doesn't exist
-        if (!document.querySelector('.home-button')) {
-            const homeButton = document.createElement('button');
-            homeButton.className = 'home-button';
-            homeButton.innerHTML = 'Take Quiz Again';
-            homeButton.onclick = () => window.location.reload();
-            homeButton.style.cssText = `
-                margin: 20px auto;
-                display: block;
-                padding: 10px 20px;
-                background: var(--primary-color);
-                color: white;
-                border: none;
-                border-radius: 5px;
-                cursor: pointer;
-                font-size: 16px;
-            `;
-            leaderboardEl.appendChild(homeButton);
-        }
-
-        // Show corner button
-        const cornerButton = document.querySelector('.corner-button');
-        if (cornerButton) {
-            cornerButton.style.display = 'block';
-        }
+        // Show home button after leaderboard
+        const homeButton = document.createElement('button');
+        homeButton.className = 'home-button';
+        homeButton.innerHTML = 'Take Quiz Again';
+        homeButton.onclick = () => window.location.reload();
+        homeButton.style.cssText = `
+            margin: 20px auto;
+            display: block;
+            padding: 10px 20px;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        `;
+        leaderboardEl.appendChild(homeButton);
 
     } catch (error) {
         console.error('Error fetching leaderboard:', error);
@@ -794,35 +782,3 @@ function showLeaderboardFromHome() {
     // Fetch and display data
     fetchLeaderboard();
 }
-
-// Add CSS for leaderboard rows
-const styles = document.createElement('style');
-styles.textContent = `
-    .leaderboard-row {
-        transition: all 0.3s ease;
-    }
-    .leaderboard-row:nth-child(even) {
-        background-color: #f5f5f5;
-    }
-    .leaderboard-row:hover {
-        background-color: #e9e9e9;
-    }
-    #leaderboard {
-        margin: 20px auto;
-        max-width: 800px;
-    }
-    #leaderboard table {
-        width: 100%;
-        border-collapse: collapse;
-    }
-    #leaderboard th, #leaderboard td {
-        padding: 12px;
-        text-align: center;
-        border: 1px solid #ddd;
-    }
-    #leaderboard th {
-        background-color: var(--primary-color);
-        color: white;
-    }
-`;
-document.head.appendChild(styles);
