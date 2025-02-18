@@ -2,6 +2,8 @@ let startTime;
 let playerName = '';
 let correctAnswers = 0;
 let currentQuestion = 1;
+let timerInterval;
+const QUIZ_TIME_LIMIT = 120; // 2 minutes in seconds
 
 // Function to save quiz state
 function saveQuizState() {
@@ -14,6 +16,79 @@ function saveQuizState() {
     }));
 }
 
+// Function to format time
+function formatTime(seconds) {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+}
+
+// Add timer display to quiz section
+function createTimer() {
+    const timerDiv = document.createElement('div');
+    timerDiv.id = 'timer';
+    timerDiv.className = 'timer';
+    timerDiv.style.cssText = `
+        position: fixed;
+        top: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: var(--primary-color);
+        color: white;
+        padding: 10px 20px;
+        border-radius: 20px;
+        font-weight: bold;
+        font-size: 18px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        z-index: 1000;
+    `;
+    document.body.appendChild(timerDiv);
+}
+
+// Function to start timer
+function startTimer() {
+    let timeLeft = QUIZ_TIME_LIMIT;
+    const timerDiv = document.getElementById('timer');
+    
+    timerInterval = setInterval(() => {
+        timeLeft--;
+        timerDiv.textContent = `Time Left: ${formatTime(timeLeft)}`;
+        
+        if (timeLeft <= 10) {
+            timerDiv.style.animation = 'pulse 1s infinite';
+            timerDiv.style.backgroundColor = '#ff4444';
+        }
+        
+        if (timeLeft <= 0) {
+            clearInterval(timerInterval);
+            endQuiz();
+        }
+    }, 1000);
+}
+
+// Function to end quiz
+async function endQuiz() {
+    clearInterval(timerInterval);
+    const completionTime = Math.floor((Date.now() - startTime) / 1000);
+    
+    // Hide all questions
+    document.querySelectorAll('.question').forEach(q => {
+        q.style.display = 'none';
+    });
+    
+    // Show result
+    document.getElementById('result').style.display = 'block';
+    
+    // Save result to MongoDB
+    await saveResult(completionTime);
+    
+    // Remove timer display
+    const timerDiv = document.getElementById('timer');
+    if (timerDiv) {
+        timerDiv.remove();
+    }
+}
+
 // Function to check answer
 function checkAnswer(questionNumber, correctAnswer) {
     const userAnswer = document.getElementById(`answer${questionNumber}`).value.trim();
@@ -23,11 +98,7 @@ function checkAnswer(questionNumber, correctAnswer) {
         document.getElementById(`question${questionNumber}`).style.display = 'none';
         
         if (questionNumber === 5) {
-            const endTime = Date.now();
-            const completionTime = Math.max(0, Math.floor((endTime - startTime) / 1000));
-            document.getElementById('result').style.display = 'block';
-            localStorage.removeItem('quizState'); // Clear state on completion
-            saveResult(completionTime);
+            endQuiz();
         } else {
             currentQuestion = questionNumber + 1;
             document.getElementById(`question${currentQuestion}`).style.display = 'block';
@@ -141,7 +212,6 @@ async function startQuiz() {
         return;
     }
 
-    // Check if name exists
     try {
         const response = await fetch(`${SERVER_URL}/api/check-name`, {
             method: 'POST',
@@ -172,6 +242,11 @@ async function startQuiz() {
         document.getElementById('quizSection').style.display = 'block';
         document.querySelector('.corner-button').style.display = 'none';
         document.getElementById(`question${currentQuestion}`).style.display = 'block';
+        
+        // Create and start timer
+        createTimer();
+        startTimer();
+        
         saveQuizState();
 
     } catch (error) {
