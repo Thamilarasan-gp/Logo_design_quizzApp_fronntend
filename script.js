@@ -128,11 +128,13 @@ function clearQuizData() {
 
 // Function to end quiz
 async function endQuiz() {
+    // Immediately clear timer interval and remove timer display
     clearInterval(timerInterval);
     const timerDiv = document.getElementById('timer');
     if (timerDiv) {
         timerDiv.remove();
     }
+
     const endTime = Date.now();
     const completionTime = Math.floor((endTime - startTime) / 1000);
 
@@ -154,21 +156,16 @@ async function endQuiz() {
         border-radius: 8px;
         box-shadow: 0 2px 10px rgba(0,0,0,0.1);
     `;
-    
-    resultDiv.innerHTML = `
-        <h3 style="color: #333; margin-bottom: 20px;">Quiz Completed!</h3>
-        <p style="font-size: 18px; margin: 10px 0;">Your score: <strong>${correctAnswers}/5</strong></p>
-        <p style="font-size: 18px; margin: 10px 0;">Time taken: <strong>${formatTime(completionTime)}</strong></p>
-        <p id="countdown" style="margin-top: 20px; color: #666; font-size: 16px;">
-            Saving results and loading leaderboard...
-        </p>
-    `;
 
     try {
+        // Store final score and time before clearing
+        const finalScore = correctAnswers;
+        const finalTime = completionTime;
+
         const saveData = {
             name: playerName,
-            score: correctAnswers,
-            completionTime: completionTime,
+            score: finalScore,
+            completionTime: finalTime,
             entryTime: startTime,
             batchId: batchId
         };
@@ -189,11 +186,15 @@ async function endQuiz() {
             throw new Error(data.message || 'Failed to save results');
         }
 
-        // Update display after successful save
+        // Clear storage and reset variables after successful save
+        localStorage.clear();
+        sessionStorage.clear();
+        
+        // Update display with final values
         resultDiv.innerHTML = `
             <h3 style="color: #333; margin-bottom: 20px;">Results Saved!</h3>
-            <p style="font-size: 18px; margin: 10px 0;">Your score: <strong>${correctAnswers}/5</strong></p>
-            <p style="font-size: 18px; margin: 10px 0;">Time taken: <strong>${formatTime(completionTime)}</strong></p>
+            <p style="font-size: 18px; margin: 10px 0;">Your score: <strong>${finalScore}/5</strong></p>
+            <p style="font-size: 18px; margin: 10px 0;">Time taken: <strong>${formatTime(finalTime)}</strong></p>
             <p id="countdown" style="margin-top: 20px; color: #666; font-size: 16px; font-weight: 500;">
                 Leaderboard will appear in 30 seconds...
             </p>
