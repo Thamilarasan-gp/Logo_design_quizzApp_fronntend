@@ -554,6 +554,7 @@ button {
     width: 100%;
     text-transform: uppercase;
     letter-spacing: 1px;
+    margin-bottom: 24px;
 }
 
 button:hover {
