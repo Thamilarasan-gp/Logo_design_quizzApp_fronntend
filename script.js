@@ -527,20 +527,15 @@ async function startQuiz() {
     }
     
     playerName = document.getElementById('playerName').value.trim();
-    
     if (!playerName) {
         alert('Please enter your name');
         return;
     }
-    
-    if (!playerName.includes('_')) {
-        alert('Please enter your name in the format: name_thiranid (Example: thamil_th001)');
-        return;
-    }
 
-    const [name, thiranId] = playerName.split('_');
-    if (!name || !thiranId || !thiranId.toLowerCase().startsWith('th')) {
-        alert('Please use the correct format: name_thiranid (Example: thamil_th001)');
+    // Validate name format
+    const validation = validateNameFormat(playerName);
+    if (!validation.isValid) {
+        alert(validation.message);
         return;
     }
 
