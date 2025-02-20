@@ -477,7 +477,7 @@ function validateNameFormat(name) {
     if (!nameFormat.test(name)) {
         return {
             isValid: false,
-            message: 'Please enter your name in format: name_rollno (Example: thamil_a54h or thamil_23It97)'
+            message: 'Please enter your name in format: name_thiranId (Example: thamil_XXXX or thamil_2H48)'
         };
     }
     
