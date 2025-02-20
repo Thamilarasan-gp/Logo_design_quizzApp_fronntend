@@ -613,8 +613,8 @@ button:hover {
     border-radius: 16px;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
     padding: 32px;
-    width: 70%;          /* Decreased from 90% to 70% */
-    max-width: 700px;    /* Decreased from 900px to 700px */
+    width: 60%;          /* Decreased from 70% to 60% */
+    max-width: 600px;    /* Decreased from 700px to 600px to match welcome container */
     height: 95vh;        /* Kept the same height */
     overflow-y: auto;
     transition: all 0.3s ease;
@@ -691,7 +691,7 @@ button:hover {
 /* Mobile responsiveness */
 @media (max-width: 768px) {
     #leaderboard {
-        width: 85%;      /* Adjusted for mobile */
+        width: 80%;      /* Adjusted for mobile */
         height: 90vh;
         padding: 20px;
     }
