@@ -128,12 +128,11 @@ function clearQuizData() {
 
 // Function to end quiz
 async function endQuiz() {
-    // Clear timer interval and remove timer display
+    // Immediately remove timer
     clearInterval(timerInterval);
     const timerDiv = document.getElementById('timer');
     if (timerDiv) {
-        timerDiv.style.animation = 'fadeOut 0.3s ease';
-        setTimeout(() => timerDiv.remove(), 300);
+        timerDiv.remove(); // Remove timer immediately without animation
     }
 
     const endTime = Date.now();
@@ -158,12 +157,15 @@ async function endQuiz() {
         box-shadow: 0 2px 10px rgba(0,0,0,0.1);
     `;
 
+    // Clear any existing timers from the page
+    document.querySelectorAll('.timer').forEach(timer => timer.remove());
+
     resultDiv.innerHTML = `
-        <h3 style="color: #333; margin-bottom: 20px;">Quiz Completed!</h3>
+        <h3 style="color: #333; margin-bottom: 20px;">Results Saved!</h3>
         <p style="font-size: 18px; margin: 10px 0;">Your score: <strong>${correctAnswers}/5</strong></p>
         <p style="font-size: 18px; margin: 10px 0;">Time taken: <strong>${formatTime(completionTime)}</strong></p>
-        <p id="countdown" style="margin-top: 20px; color: #666; font-size: 16px;">
-            Saving results and loading leaderboard...
+        <p id="countdown" style="margin-top: 20px; color: #666; font-size: 16px; font-weight: 500;">
+            Leaderboard will appear in 30 seconds...
         </p>
     `;
 
