@@ -613,9 +613,9 @@ button:hover {
     border-radius: 16px;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
     padding: 32px;
-    width: 60%;
-    max-width: 900px;  /* Increased max-width */
-    height: 95vh;      /* Increased height */
+    width: 70%;          /* Decreased from 90% to 70% */
+    max-width: 700px;    /* Decreased from 900px to 700px */
+    height: 95vh;        /* Kept the same height */
     overflow-y: auto;
     transition: all 0.3s ease;
 }
@@ -691,7 +691,7 @@ button:hover {
 /* Mobile responsiveness */
 @media (max-width: 768px) {
     #leaderboard {
-        width: 95%;
+        width: 85%;      /* Adjusted for mobile */
         height: 90vh;
         padding: 20px;
     }
@@ -882,7 +882,7 @@ button:hover {
     transition: all 0.3s ease;
 }
 
-#leaderboardTable tr:hover td {
+#leaderboardTable tr:hover {
     color: var(--primary-color);
 }
 
