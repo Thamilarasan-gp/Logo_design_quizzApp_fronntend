@@ -613,7 +613,7 @@ button:hover {
     border-radius: 16px;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
     padding: 32px;
-    width: 90%;
+    width: 60%;
     max-width: 900px;  /* Increased max-width */
     height: 95vh;      /* Increased height */
     overflow-y: auto;
